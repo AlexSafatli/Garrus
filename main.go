@@ -23,5 +23,8 @@ func main() {
 	}
 	discord.AddHandler(bot.DiceRollHandler)
 	fmt.Println(discord)
+	err = discord.Open()
 	fmt.Println("Loaded")
+	for {
+	}
 }
