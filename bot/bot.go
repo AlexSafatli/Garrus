@@ -22,6 +22,11 @@ func NewBot(token string) (*Bot, error) {
 	return &Bot{Start: time.Now(), Session: discord}, nil
 }
 
+// Self returns the User struct associated with the bot user
+func (b *Bot) Self() (*discordgo.User, error) {
+	return b.User("@me")
+}
+
 func (b *Bot) String() string {
 	return fmt.Sprintf("Bot[%v] - started at %v", b.Token, b.Start)
 }

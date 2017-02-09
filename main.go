@@ -1,30 +1,38 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
+
+	"log"
+
+	"os"
 
 	"github.com/AlexSafatli/DiscordSwissArmyKnife/bot"
 	"github.com/AlexSafatli/DiscordSwissArmyKnife/config"
 )
 
 var (
-	discordToken = config.String("discord-token", "blah")
+	discordToken = config.String("discord-token", "default.token")
 )
 
 func main() {
 	rand.Seed(int64(time.Now().Nanosecond()))
-	err := config.Parse("discord.toml")
-	discord, err := bot.NewBot("Bot " + *discordToken)
+	config.Parse("discord.toml")
+	discord, _ := bot.NewBot("Bot " + *discordToken)
+	user, err := discord.Self()
 	if err != nil {
-		fmt.Printf("Threw error: %v", err)
-		return
+		log.Println("Could not get user info for bot")
+		os.Exit(1)
 	}
+	log.SetPrefix(user.Username)
 	discord.AddHandler(bot.DiceRollHandler)
-	fmt.Println(discord)
 	err = discord.Open()
-	fmt.Println("Loaded")
+	if err != nil {
+		log.Println("Could not open websocket")
+		os.Exit(1)
+	}
+	log.Println("Loaded bot with token", *discordToken)
 	for {
 	}
 }

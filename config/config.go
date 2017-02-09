@@ -158,7 +158,6 @@ func (c *Config) loadTomlTree(tree *toml.TomlTree, path []string) error {
 				value = strings.Join(items, ",")
 			}
 			err := c.Set(fullPath, fmt.Sprintf("%v", value))
-			fmt.Printf("Read (%v): %v\n", fullPath, value)
 			if err != nil {
 				return err
 			}

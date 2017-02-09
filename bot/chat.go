@@ -11,7 +11,7 @@ import (
 
 var dieStrMatcher = regexp.MustCompile(`(\[\[[^\[^\]]*\]\])`)
 
-// DiceRollHandler takes a created message and edits it with the result of a dice roll (if it matches a `[[...]]` pattern)
+// DiceRollHandler takes a created message and returns dice roll results (if a roll matches a `[[...]]` pattern)
 func DiceRollHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if dieStrMatcher.MatchString(m.Content) {
 		matches := dieStrMatcher.FindAllString(m.Content, -1)
