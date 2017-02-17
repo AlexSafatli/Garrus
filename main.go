@@ -14,6 +14,7 @@ import (
 
 var (
 	discordToken = config.String("discord-token", "default.token")
+	cggAppKey    = config.String("cgg-appkey", "default-key")
 )
 
 func main() {
@@ -22,14 +23,14 @@ func main() {
 	discord, _ := bot.NewBot("Bot " + *discordToken)
 	user, err := discord.Self()
 	if err != nil {
-		log.Println("Could not get user info for bot")
+		log.Fatalln("Could not get user info for bot")
 		os.Exit(1)
 	}
 	log.SetPrefix(user.Username)
 	discord.AddHandler(bot.DiceRollHandler)
 	err = discord.Open()
 	if err != nil {
-		log.Println("Could not open websocket")
+		log.Fatalln("Could not open websocket")
 		os.Exit(1)
 	}
 	log.Println("Loaded bot with token", *discordToken)
