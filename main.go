@@ -26,8 +26,7 @@ func main() {
 		log.Fatalln("Could not get user info for bot")
 		os.Exit(1)
 	}
-	log.SetPrefix(user.Username)
-	discord.AddHandler(bot.DiceRollHandler)
+	log.SetPrefix(user.Username + " – ")
 	err = discord.Open()
 	if err != nil {
 		log.Fatalln("Could not open websocket")
