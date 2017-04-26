@@ -6,10 +6,11 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func (b *Bot) SendEmbedMessage(channelId string, title string, description string, fields []*discordgo.MessageEmbedField) *discordgo.Message {
+func (b *Bot) SendEmbedMessage(channelId string, title string, description string, fields map[string]string) *discordgo.Message {
 	embed := &discordgo.MessageEmbed{Title: title, Description: description, Color: discordColorDarkNavy}
-	for i := range fields {
-		embed.Fields = append(embed.Fields, fields[i])
+	embedFields := MakeMessageEmbedFieldSlice(fields)
+	for i := range embedFields {
+		embed.Fields = append(embed.Fields, embedFields[i])
 	}
 	embed.Footer = &discordgo.MessageEmbedFooter{
 		Text: Version.Name + " " + Version.Version + " – " + Version.Developer,

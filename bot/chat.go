@@ -18,7 +18,7 @@ func DiceRollHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		matches := dieStrMatcher.FindAllString(m.Content, -1)
 		for _, match := range matches {
 			dieStr := match[2 : len(match)-2]
-			msgToSend := fmt.Sprintf("**%d** ([`%s`]) *rolled by* %s", rpg.Roll(dieStr), dieStr, m.Author.Username)
+			msgToSend := fmt.Sprintf("**%d** ([`%s`]) *was rolled by* %s", rpg.Roll(dieStr), dieStr, m.Author.Username)
 			_, err := s.ChannelMessageSend(m.ChannelID, msgToSend)
 			if err != nil {
 				log.Println("Failed to send message with result", msgToSend, "to channel", m.ChannelID)

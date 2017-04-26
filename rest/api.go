@@ -65,17 +65,17 @@ func (c *Client) NewRequest(method, urlstr string, params map[string]string, bod
 	return req, nil
 }
 
-func (c *Client) Do(req *http.Request, obj interface{}) (*http.Response, error) {
+func (c *Client) Do(req *http.Request, obj interface{}) error {
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer func() {
 		// Drain up to 512 bytes and close body to let Transport reuse connection
 		io.CopyN(ioutil.Discard, resp.Body, 512)
 	}()
 	if status := resp.StatusCode; status != 200 && status != 201 {
-		return resp, fmt.Errorf("Received status code %d", status)
+		return fmt.Errorf("Received status code %d", status)
 	}
 	if obj != nil {
 		if w, ok := obj.(io.Writer); ok {
@@ -87,7 +87,7 @@ func (c *Client) Do(req *http.Request, obj interface{}) (*http.Response, error) 
 			}
 		}
 	}
-	return resp, err
+	return err
 }
 
 func parseParams(params map[string]string) string {

@@ -61,5 +61,5 @@ func (b *Bot) Self() (*discordgo.User, error) {
 }
 
 func (b *Bot) String() string {
-	return fmt.Sprintf("Bot[%v] - started at %v", b.Token, b.Start)
+	return fmt.Sprintf("Bot[%s] - started at %v", b.Token, b.Start)
 }

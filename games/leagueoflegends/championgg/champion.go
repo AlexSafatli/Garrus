@@ -1,10 +1,6 @@
 package championgg
 
-import (
-	"net/http"
-
-	"github.com/AlexSafatli/DiscordSwissArmyKnife/rest"
-)
+import "github.com/AlexSafatli/DiscordSwissArmyKnife/rest"
 
 type ChampionService rest.Service
 
@@ -167,28 +163,28 @@ type Item struct {
 type Champions []ChampionInfo
 type ChampionRoles []ChampionRole
 
-func (c *ChampionService) List() (*Champions, *http.Response, error) {
+func (c *ChampionService) List() (*Champions, error) {
 	r, err := c.Client.NewRequest("GET", "champions", nil, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	champions := &Champions{}
-	resp, err := c.Client.Do(r, champions)
+	err = c.Client.Do(r, champions)
 	if err != nil {
-		return nil, resp, err
+		return nil, err
 	}
-	return champions, resp, nil
+	return champions, nil
 }
 
-func (c *ChampionService) Get(name string) (*ChampionRoles, *http.Response, error) {
+func (c *ChampionService) Get(name string) (*ChampionRoles, error) {
 	r, err := c.Client.NewRequest("GET", "champion/"+name, nil, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	champion := &ChampionRoles{}
-	resp, err := c.Client.Do(r, champion)
+	err = c.Client.Do(r, champion)
 	if err != nil {
-		return nil, resp, err
+		return nil, err
 	}
-	return champion, resp, nil
+	return champion, nil
 }
