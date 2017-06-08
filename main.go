@@ -8,7 +8,6 @@ import (
 
 	"os"
 
-	"github.com/AlexSafatli/DiscordSwissArmyKnife/bot"
 	"github.com/AlexSafatli/DiscordSwissArmyKnife/config"
 )
 
@@ -20,7 +19,7 @@ var (
 func main() {
 	rand.Seed(int64(time.Now().Nanosecond()))
 	config.Parse("discord.toml")
-	discord, _ := bot.NewBot("Bot " + *discordToken)
+	discord, _ := NewBot("Bot " + *discordToken)
 	user, err := discord.Self()
 	if err != nil {
 		log.Fatalln("Could not get user info for bot")

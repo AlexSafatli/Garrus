@@ -1,4 +1,4 @@
-package bot
+package chat
 
 type version struct {
 	Name      string
