@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AlexSafatli/DiscordSwissArmyKnife/commands"
+	"./chat"
+	"./commands"
+
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -27,12 +29,12 @@ func NewBot(token string) (b *Bot, err error) {
 
 func (b *Bot) routeHandlers() {
 	b.AddHandler(chat.DiceRollHandler)
-	b.AddHandler(chat.NewHandler(".about", commands.AboutCommand))
+	b.AddHandler(chat.NewHandler(b.Session, ".about", commands.AboutCommand))
 }
 
 // Self returns the User struct associated with the bot user
 func (b *Bot) Self() (*discordgo.User, error) {
-	return b.User("@me")
+	return b.User("@me"), nil
 }
 
 func (b *Bot) String() string {

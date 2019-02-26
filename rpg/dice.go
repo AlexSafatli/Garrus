@@ -10,7 +10,8 @@ import (
 
 var (
 	dieMatcher = regexp.MustCompile(`(\d+)d(\d+)`)
-	opa        = map[string]struct { // Operator Precedence and supported operators
+	opa        = map[string]struct {
+		// Operator Precedence and supported operators
 		prec   int
 		rAssoc bool
 	}{

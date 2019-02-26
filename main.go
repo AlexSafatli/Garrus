@@ -8,17 +8,20 @@ import (
 
 	"os"
 
-	"github.com/AlexSafatli/DiscordSwissArmyKnife/config"
+	"./config"
 )
 
 var (
 	discordToken = config.String("discord-token", "default.token")
-	cggAppKey    = config.String("cgg-appkey", "default-key")
 )
 
 func main() {
 	rand.Seed(int64(time.Now().Nanosecond()))
-	config.Parse("discord.toml")
+	err := config.Parse("discord.toml")
+	if err != nil {
+		log.Fatalln("Could not parse discord toml")
+		os.Exit(1)
+	}
 	discord, _ := NewBot("Bot " + *discordToken)
 	user, err := discord.Self()
 	if err != nil {

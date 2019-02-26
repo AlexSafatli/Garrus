@@ -7,8 +7,6 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	"github.com/pelletier/go-toml"
 )
 
 // Config defines a configuration file
