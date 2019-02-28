@@ -34,7 +34,7 @@ func (b *Bot) routeHandlers() {
 
 // Self returns the User struct associated with the bot user
 func (b *Bot) Self() (*discordgo.User, error) {
-	return b.User("@me"), nil
+	return b.User("@me")
 }
 
 func (b *Bot) String() string {

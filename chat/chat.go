@@ -5,7 +5,7 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/AlexSafatli/DiscordSwissArmyKnife/rpg"
+	"../rpg"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -34,7 +34,7 @@ const (
 	discordColorDarkNavy   = 2899536
 )
 
-var dieStrMatcher = regexp.MustCompile(`(\[\[[^\[^\]]*\]\])`)
+var dieStrMatcher = regexp.MustCompile(`(\[\[[^\[^\]]*]])`)
 
 // DiceRollHandler takes a created message and returns dice roll results (if a roll matches a `[[...]]` pattern)
 func DiceRollHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -47,6 +47,12 @@ func DiceRollHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, err := s.ChannelMessageSend(m.ChannelID, msgToSend)
 			if err != nil {
 				log.Println("Failed to send message with result", msgToSend, "to channel", m.ChannelID)
+			}
+		}
+		if m.GuildID != "" {
+			err := s.ChannelMessageDelete(m.ChannelID, m.ID)
+			if err != nil {
+				log.Printf("Could not delete dice roll message from %s", m.Author.Username)
 			}
 		}
 	}
