@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/pelletier/go-toml"
 )
 
 // Config defines a configuration file
@@ -135,11 +137,11 @@ func (c *Config) ParseBytes(data []byte) error {
 	return nil
 }
 
-func (c *Config) loadTomlTree(tree *toml.TomlTree, path []string) error {
+func (c *Config) loadTomlTree(tree *toml.Tree, path []string) error {
 	for _, key := range tree.Keys() {
 		fullPath := append(path, key)
 		value := tree.Get(key)
-		if subtree, isTree := value.(*toml.TomlTree); isTree {
+		if subtree, isTree := value.(*toml.Tree); isTree {
 			err := c.loadTomlTree(subtree, fullPath)
 			if err != nil {
 				return err

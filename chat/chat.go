@@ -49,11 +49,16 @@ func DiceRollHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				log.Println("Failed to send message with result", msgToSend, "to channel", m.ChannelID)
 			}
 		}
-		if m.GuildID != "" {
-			err := s.ChannelMessageDelete(m.ChannelID, m.ID)
-			if err != nil {
-				log.Printf("Could not delete dice roll message from %s", m.Author.Username)
-			}
+		DeleteReceivedMessage(s, m)
+	}
+}
+
+// DeleteReceivedMessage takes a created message and deletes it if it is not private
+func DeleteReceivedMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if m.GuildID != "" {
+		err := s.ChannelMessageDelete(m.ChannelID, m.ID)
+		if err != nil {
+			log.Printf("Could not delete message from %s", m.Author.Username)
 		}
 	}
 }
