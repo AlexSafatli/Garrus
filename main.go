@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"log"
@@ -17,24 +20,30 @@ var (
 
 func main() {
 	rand.Seed(int64(time.Now().Nanosecond()))
+
 	err := config.Parse("discord.toml")
 	if err != nil {
 		log.Fatalln("Could not parse discord toml")
-		os.Exit(1)
 	}
+
 	discord, _ := NewBot("Bot " + *discordToken)
 	user, err := discord.Self()
 	if err != nil {
 		log.Fatalln("Could not get user info for bot")
-		os.Exit(1)
 	}
 	log.SetPrefix(user.Username + " – ")
-	err = discord.Open()
-	if err != nil {
+
+	if err = discord.Open(); err != nil {
 		log.Fatalln("Could not open websocket")
-		os.Exit(1)
 	}
 	log.Println("Loaded bot with token", *discordToken)
-	for {
-	}
+
+	// Wait here until CTRL-C or another term signal
+	fmt.Println("Bot is now running. Press CTRL-C to exit.")
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-sig
+
+	_ = discord.Close()
+	fmt.Println("Aborted!")
 }
