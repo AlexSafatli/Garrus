@@ -7,10 +7,11 @@ import (
 )
 
 func SendEmbedMessage(s *discordgo.Session, channelId string, title string, description string, fields map[string]string) *discordgo.Message {
-	embed := &discordgo.MessageEmbed{Title: title, Description: description, Color: discordColorDarkNavy}
-	embedFields := MakeMessageEmbedFieldSlice(fields)
-	for i := range embedFields {
-		embed.Fields = append(embed.Fields, embedFields[i])
+	embed := &discordgo.MessageEmbed{Title: title, Description: description, Color: discordColorNavy}
+	if fields != nil {
+		for _, embedField := range makeMessageEmbedFieldSlice(fields) {
+			embed.Fields = append(embed.Fields, embedField)
+		}
 	}
 	embed.Footer = &discordgo.MessageEmbedFooter{
 		Text: Version.Name + " " + Version.Version + " – " + Version.Developer,
@@ -22,7 +23,7 @@ func SendEmbedMessage(s *discordgo.Session, channelId string, title string, desc
 	return msg
 }
 
-func MakeMessageEmbedFieldSlice(vals map[string]string) (arr []*discordgo.MessageEmbedField) {
+func makeMessageEmbedFieldSlice(vals map[string]string) (arr []*discordgo.MessageEmbedField) {
 	for k, v := range vals {
 		arr = append(arr, &discordgo.MessageEmbedField{Name: k, Value: v})
 	}
