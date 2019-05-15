@@ -6,6 +6,9 @@ import (
 import "strings"
 
 func NewHandler(s *discordgo.Session, command string, commandFunction func(*discordgo.Session, *discordgo.MessageCreate)) func(*discordgo.Session, *discordgo.MessageCreate) {
+	if s == nil {
+		return nil
+	}
 	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if strings.HasPrefix(m.Content, command) {
 			commandFunction(s, m)

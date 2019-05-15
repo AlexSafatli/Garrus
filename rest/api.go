@@ -31,8 +31,8 @@ func NewClient(appid, appkey, host string) *Client {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // Trust self-signed certificates
 		},
 	}
-	url, _ := url.Parse(host)
-	c := &Client{client: httpClient, Base: url, AppID: appid, AppKey: appkey}
+	u, _ := url.Parse(host)
+	c := &Client{client: httpClient, Base: u, AppID: appid, AppKey: appkey}
 	c.Common.Client = c
 	return c
 }
@@ -72,14 +72,14 @@ func (c *Client) Do(req *http.Request, obj interface{}) error {
 	}
 	defer func() {
 		// Drain up to 512 bytes and close body to let Transport reuse connection
-		io.CopyN(ioutil.Discard, resp.Body, 512)
+		_, _ = io.CopyN(ioutil.Discard, resp.Body, 512)
 	}()
 	if status := resp.StatusCode; status != 200 && status != 201 {
-		return fmt.Errorf("Received status code %d", status)
+		return fmt.Errorf("received status code %d", status)
 	}
 	if obj != nil {
 		if w, ok := obj.(io.Writer); ok {
-			io.Copy(w, resp.Body)
+			_, _ = io.Copy(w, resp.Body)
 		} else {
 			err = json.NewDecoder(resp.Body).Decode(obj)
 			if err == io.EOF {

@@ -99,18 +99,33 @@ func eval(rpn string) int {
 	for _, token := range strings.Fields(rpn) {
 		switch token {
 		case "+":
+			if len(stack) == 0 {
+				return 0
+			}
 			stack[len(stack)-2] += stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
 		case "-":
+			if len(stack) == 0 {
+				return 0
+			}
 			stack[len(stack)-2] -= stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
 		case "*":
+			if len(stack) == 0 {
+				return 0
+			}
 			stack[len(stack)-2] *= stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
 		case "/":
+			if len(stack) == 0 {
+				return 0
+			}
 			stack[len(stack)-2] /= stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
 		case "^":
+			if len(stack) == 0 {
+				return 0
+			}
 			stack[len(stack)-2] = int(math.Pow(float64(stack[len(stack)-2]), float64(stack[len(stack)-1])))
 			stack = stack[:len(stack)-1]
 		default:

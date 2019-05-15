@@ -15,6 +15,7 @@ import (
 )
 
 var (
+	// TODO use config library
 	discordToken = config.String("discord-token", "default.token")
 )
 
