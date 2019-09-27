@@ -28,8 +28,7 @@ func NewBot(token string) (b *Bot, err error) {
 }
 
 func (b *Bot) routeHandlers() {
-	b.AddHandler(chat.DiceRollHandler)
-	b.AddHandler(chat.NewHandler(b.Session, ".about", commands.AboutCommand))
+	b.AddHandler(chat.NewHandler(b.Session, ".help", commands.AboutCommand))
 }
 
 // Self returns the User struct associated with the bot user
