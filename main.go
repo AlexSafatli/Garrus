@@ -11,7 +11,7 @@ import (
 
 	"os"
 
-	"./config"
+	"github.com/AlexSafatli/Garrus/config"
 )
 
 func main() {

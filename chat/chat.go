@@ -1,12 +1,8 @@
 package chat
 
 import (
-	"fmt"
-	"log"
-	"regexp"
-
-	"../rpg"
 	"github.com/bwmarrin/discordgo"
+	"log"
 )
 
 const (
