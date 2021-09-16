@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"./chat"
-	"./commands"
+	"github.com/AlexSafatli/DiscordSwissArmyKnife/chat"
+	"github.com/AlexSafatli/DiscordSwissArmyKnife/commands"
 
 	"github.com/bwmarrin/discordgo"
 )

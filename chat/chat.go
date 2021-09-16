@@ -5,7 +5,7 @@ import (
 	"log"
 	"regexp"
 
-	"../rpg"
+	"github.com/AlexSafatli/DiscordSwissArmyKnife/rpg"
 	"github.com/bwmarrin/discordgo"
 )
 
