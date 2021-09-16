@@ -11,13 +11,13 @@ import (
 
 	"os"
 
-	"./config"
+	"github.com/AlexSafatli/DiscordSwissArmyKnife/config"
 )
 
 func main() {
 	var err error
 
-	rand.Seed(int64(time.Now().Nanosecond()))
+	rand.Seed(int64(time.Now().Nanosecond())) // set up for any randomness
 
 	configValues := config.LoadConfigs()
 	discord, _ := NewBot("Bot " + configValues.DiscordToken)
