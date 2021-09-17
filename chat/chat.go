@@ -36,7 +36,7 @@ const (
 
 var dieStrMatcher = regexp.MustCompile(`(\[\[[^\[^\]]*]])`)
 
-// DiceRollHandler takes a created message and returns dice roll results (if a roll matches a `[[...]]` pattern)
+// DiceRollHandler returns dice roll results if a message matches a `[[...]]` pattern
 func DiceRollHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if dieStrMatcher.MatchString(m.Content) {
 		log.Printf("Found dice roll(s) to handle in %s", m.Content)
@@ -44,7 +44,7 @@ func DiceRollHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		for _, match := range matches {
 			dieStr := match[2 : len(match)-2]
 			msgToSend := fmt.Sprintf("**%d** ([`%s`]) *was rolled by* %s", rpg.Roll(dieStr), dieStr, m.Author.Username)
-			_ = SendEmbedMessage(s, m.ChannelID, fmt.Sprintf("%s is Rolling Dice", m.Author.Username), msgToSend, nil)
+			_ = SendEmbedMessage(s, m.ChannelID, fmt.Sprintf("%s Rolled Dice", m.Author.Username), msgToSend, nil)
 		}
 		DeleteReceivedMessage(s, m)
 	}
