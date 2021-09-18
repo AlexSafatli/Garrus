@@ -15,6 +15,7 @@ type SlashCommand struct {
 	Function func(*discordgo.Session, *discordgo.InteractionCreate)
 }
 
+// NewMessageCommandRouteHandler is a generic handler function that calls a corresponding command function by name
 func NewMessageCommandRouteHandler(s *discordgo.Session, cmds []*MessageCommand) func(*discordgo.Session, *discordgo.MessageCreate) {
 	if s == nil {
 		return nil
@@ -30,6 +31,7 @@ func NewMessageCommandRouteHandler(s *discordgo.Session, cmds []*MessageCommand)
 	}
 }
 
+// NewSlashCommandRouteHandler is a generic handler function that calls a corresponding command function by name for slash commands
 func NewSlashCommandRouteHandler(s *discordgo.Session, cmds []*SlashCommand) func(*discordgo.Session, *discordgo.InteractionCreate) {
 	if s == nil {
 		return nil
