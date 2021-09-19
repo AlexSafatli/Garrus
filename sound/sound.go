@@ -1,4 +1,4 @@
-package sounds
+package sound
 
 type SoundFile struct {
 	ID                 string
