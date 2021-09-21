@@ -25,7 +25,7 @@ func saveSoundFileToDCA(source, target string) error {
 	return err
 }
 
-func playDCA(path string, vc *discordgo.VoiceConnection) error {
+func PlayDCA(path string, vc *discordgo.VoiceConnection) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return err

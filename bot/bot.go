@@ -1,7 +1,8 @@
-package main
+package bot
 
 import (
 	"fmt"
+	"github.com/AlexSafatli/Garrus/vc"
 	"time"
 
 	"github.com/AlexSafatli/Garrus/chat"
@@ -12,9 +13,10 @@ import (
 
 // Bot encompasses a DiscordGo Bot
 type Bot struct {
-	Start           time.Time
-	MessageCommands []*chat.MessageCommand
-	SlashCommands   []*chat.SlashCommand
+	Start            time.Time
+	MessageCommands  []*chat.MessageCommand
+	SlashCommands    []*chat.SlashCommand
+	VoiceConnections map[string]*discordgo.VoiceConnection
 	*discordgo.Session
 }
 
@@ -58,6 +60,7 @@ func (b *Bot) initSlashCommands() {
 func (b *Bot) routeHandlers() {
 	b.AddHandler(chat.NewMessageCommandRouteHandler(b.Session, b.MessageCommands))
 	b.AddHandler(chat.NewSlashCommandRouteHandler(b.Session, b.SlashCommands))
+	b.AddHandler(vc.OnGuildVoiceJoinHandler(b))
 }
 
 func (b *Bot) registerSlashCommands() error {

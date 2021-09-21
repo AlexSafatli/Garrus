@@ -6,10 +6,12 @@ const (
 	confType     = "toml"
 	basePath     = "."
 	discordToken = "discord.token"
+	soundsPath   = "paths.sounds"
 )
 
 type Values struct {
 	DiscordToken string
+	SoundsPath   string
 }
 
 func LoadConfigs() Values {
@@ -20,5 +22,6 @@ func LoadConfigs() Values {
 	}
 	return Values{
 		DiscordToken: conf.ValueString(discordToken),
+		SoundsPath:   conf.ValueString(soundsPath),
 	}
 }

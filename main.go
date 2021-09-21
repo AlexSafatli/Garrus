@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/AlexSafatli/Garrus/bot"
 	"math/rand"
 	"os/signal"
 	"syscall"
@@ -20,7 +21,7 @@ func main() {
 	rand.Seed(int64(time.Now().Nanosecond()))
 
 	configValues := config.LoadConfigs()
-	discord, _ := NewBot("Bot " + configValues.DiscordToken)
+	discord, _ := bot.NewBot("Bot " + configValues.DiscordToken)
 	user, err := discord.Self()
 	if err != nil {
 		log.Fatalln("Could not get user info for bot")

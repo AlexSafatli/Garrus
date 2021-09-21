@@ -30,6 +30,10 @@ const (
 	discordColorDarkNavy   = 2899536
 )
 
+const (
+	separator = " - "
+)
+
 // DeleteReceivedMessage takes a created message and deletes it if it is not private
 func DeleteReceivedMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.GuildID != "" {

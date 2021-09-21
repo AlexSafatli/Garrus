@@ -1,2 +1,4 @@
 [discord]
 token="token.token"
+[paths]
+sounds="./sounds"

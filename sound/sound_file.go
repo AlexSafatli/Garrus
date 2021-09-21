@@ -1,9 +1,9 @@
 package sound
 
-type SoundFile struct {
+type File struct {
 	ID                 string
 	FilePath           string
-	Category           string
+	Categories         []string
 	NumberPlays        uint
 	ExcludedFromRandom bool
 }
