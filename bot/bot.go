@@ -2,7 +2,6 @@ package bot
 
 import (
 	"fmt"
-	"github.com/AlexSafatli/Garrus/sound"
 	"github.com/AlexSafatli/Garrus/vc"
 	"time"
 
@@ -18,7 +17,6 @@ type Bot struct {
 	MessageCommands  []*chat.MessageCommand
 	SlashCommands    []*chat.SlashCommand
 	VoiceConnections map[string]*discordgo.VoiceConnection
-	SoundLibrary     *sound.Library
 	*discordgo.Session
 }
 
@@ -44,6 +42,10 @@ func (b *Bot) initMessageCommands() {
 			Command:  ".about",
 			Function: commands.AboutMessageCommand,
 		},
+		{
+			Command:  ".entrance",
+			Function: commands.SetEntranceMessageCommand,
+		},
 	}
 }
 
@@ -55,6 +57,21 @@ func (b *Bot) initSlashCommands() {
 				Description: "About this bot",
 			},
 			Function: commands.AboutSlashCommand,
+		},
+		{
+			Command: &discordgo.ApplicationCommand{
+				Name:        "entrance",
+				Description: "Set your entrance sound when joining a voice channel (or clear it if nothing is specified)",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionString,
+						Name:        "sound",
+						Description: "The name of the sound",
+						Required:    false,
+					},
+				},
+			},
+			Function: commands.SetEntranceSlashCommand,
 		},
 	}
 }

@@ -36,7 +36,8 @@ func OnGuildVoiceJoinHandler(b *bot.Bot) func(*discordgo.Session, *discordgo.Voi
 			}
 			entrance := sound.GetEntranceForUser(vs.UserID)
 			if entrance != nil {
-				var file = b.SoundLibrary.SoundMap[entrance.SoundID]
+				var soundMap = sound.GetSounds()
+				var file = (*soundMap)[entrance.SoundID]
 				var soundInfo string
 				err = sound.PlayDCA(file.FilePath, b.VoiceConnections[vs.GuildID])
 				if err != nil {

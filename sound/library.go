@@ -13,6 +13,8 @@ type Library struct {
 	Categories []Category
 }
 
+var library Library
+
 func (l *Library) doConversions() []error {
 	var errs []error
 	for _, v := range l.SoundMap {
@@ -33,25 +35,30 @@ func (l *Library) doConversions() []error {
 	return errs
 }
 
-func GetSounds(rootPath string) *Library {
+func LoadSounds(rootPath string) error {
 	l := Library{RootPath: rootPath, SoundMap: make(map[string]File)}
 	files, err := walkRootDirectoryForSounds(rootPath, "")
 	if err != nil {
-		return nil
+		return err
 	}
 	for i := range files {
 		l.SoundMap[files[i].ID] = files[i]
 	}
 	errs := l.doConversions()
 	if len(errs) > 0 {
-		return nil
+		return errs[0]
 	}
 	cats, err := walkRootDirectoryForCategories(rootPath, "")
 	if err != nil {
-		return nil
+		return err
 	}
 	l.Categories = cats
-	return &l
+	library = l
+	return nil
+}
+
+func GetSounds() *map[string]File {
+	return &library.SoundMap
 }
 
 func walkRootDirectoryForSounds(start, root string) (files []File, err error) {
