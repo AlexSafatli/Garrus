@@ -4,11 +4,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 )
 
 type Library struct {
-	RootPath string
-	SoundMap map[string]File
+	RootPath   string
+	SoundMap   map[string]File
+	Categories []Category
 }
 
 func (l *Library) doConversions() []error {
@@ -19,6 +21,11 @@ func (l *Library) doConversions() []error {
 			err := saveSoundFileToDCA(v.FilePath, newPath)
 			if err != nil {
 				errs = append(errs, err)
+			} else {
+				err = os.Remove(v.FilePath)
+				if err != nil {
+					errs = append(errs, err)
+				}
 			}
 			v.FilePath = newPath
 		}
@@ -28,7 +35,7 @@ func (l *Library) doConversions() []error {
 
 func GetSounds(rootPath string) *Library {
 	l := Library{RootPath: rootPath, SoundMap: make(map[string]File)}
-	files, err := walkRootDirectory(rootPath, 0)
+	files, err := walkRootDirectoryForSounds(rootPath, "")
 	if err != nil {
 		return nil
 	}
@@ -39,19 +46,27 @@ func GetSounds(rootPath string) *Library {
 	if len(errs) > 0 {
 		return nil
 	}
+	cats, err := walkRootDirectoryForCategories(rootPath, "")
+	if err != nil {
+		return nil
+	}
+	l.Categories = cats
 	return &l
 }
 
-func walkRootDirectory(root string, level uint) (files []File, err error) {
-	var cleanRoot = filepath.Clean(root)
+func walkRootDirectoryForSounds(start, root string) (files []File, err error) {
+	if len(root) == 0 {
+		root = start
+	}
+	var cleanRoot = filepath.Clean(start)
 	err = filepath.Walk(cleanRoot, func(path string, info os.FileInfo, err error) error {
 		if err != nil || path == cleanRoot || strings.HasPrefix(info.Name(), ".") {
 			return nil // ignore hidden files, etc.
 		}
 		if !info.IsDir() && isSoundFile(info.Name()) {
 			var cats []string
-			if level > 0 {
-				cats = []string{filepath.Base(cleanRoot)}
+			if filepath.Dir(path) != root {
+				cats = []string{filepath.Base(filepath.Dir(path))}
 			}
 			files = append(files, File{
 				ID:         strings.TrimSuffix(info.Name(), filepath.Ext(info.Name())),
@@ -59,9 +74,12 @@ func walkRootDirectory(root string, level uint) (files []File, err error) {
 				Categories: cats,
 			})
 		} else if info.IsDir() && cleanRoot != filepath.Dir(path) {
-			var subfiles, err = walkRootDirectory(path, level+1)
+			var subfiles, err = walkRootDirectoryForSounds(path, root)
 			if err != nil {
 				return err
+			}
+			for i := range subfiles {
+				subfiles[i].Categories = append(subfiles[i].Categories, filepath.Base(filepath.Dir(path)))
 			}
 			files = append(files, subfiles...)
 		} else if cleanRoot == filepath.Dir(path) {
@@ -72,12 +90,21 @@ func walkRootDirectory(root string, level uint) (files []File, err error) {
 	return
 }
 
+func isAllLowercase(basename string) bool {
+	for _, r := range basename {
+		if !unicode.IsLower(r) && unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
+}
+
 func isSoundFile(basename string) bool {
 	var ext = filepath.Ext(basename)
 	if len(ext) > 0 {
 		ext = ext[1:] // trim the dot
 	}
-	return ext == "mp3" || ext == "ogg" || ext == "m4a" || ext == "m4r" || ext == "wav" || ext == "dca"
+	return isAllLowercase(basename) && (ext == "mp3" || ext == "ogg" || ext == "m4a" || ext == "m4r" || ext == "wav" || ext == "dca")
 }
 
 func needsConversionToDCA(path string) bool {
@@ -86,4 +113,27 @@ func needsConversionToDCA(path string) bool {
 		ext = ext[1:] // trim the dot
 	}
 	return ext != "dca"
+}
+
+func walkRootDirectoryForCategories(start, root string) (cats []Category, err error) {
+	if len(root) == 0 {
+		root = start
+	}
+	var cleanRoot = filepath.Clean(start)
+	err = filepath.Walk(cleanRoot, func(path string, info os.FileInfo, err error) error {
+		if err != nil || path == cleanRoot || strings.HasPrefix(info.Name(), ".") {
+			return nil // ignore hidden files, etc.
+		}
+		if info.IsDir() {
+			var cat = Category{Name: info.Name()}
+			children, err := walkRootDirectoryForCategories(path, root)
+			if err != nil {
+				return err
+			}
+			cat.Children = append(cat.Children, children...)
+			cats = append(cats, cat)
+		}
+		return filepath.SkipDir
+	})
+	return
 }

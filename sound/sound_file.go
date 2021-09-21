@@ -7,3 +7,8 @@ type File struct {
 	NumberPlays        uint
 	ExcludedFromRandom bool
 }
+
+type Category struct {
+	Name     string
+	Children []Category
+}

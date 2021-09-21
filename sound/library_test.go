@@ -34,7 +34,7 @@ func prepareTestTree(tmp, tree string) (string, error) {
 	return path, err
 }
 
-func TestWalkRootDirectory(t *testing.T) {
+func TestWalkRootDirectoryForSounds(t *testing.T) {
 	tmp, err := prepareTestRoot()
 	if err != nil {
 		t.Error(err)
@@ -42,7 +42,7 @@ func TestWalkRootDirectory(t *testing.T) {
 	}
 
 	tmpA, errA := prepareTestTree(tmp, "Games/Factorio")
-	tmpB, errB := prepareTestTree(tmp, "Games/Starcraft")
+	tmpB, errB := prepareTestTree(tmp, "")
 	tmpC, errC := prepareTestTree(tmp, "Music")
 	if errA != nil {
 		t.Error(errA)
@@ -57,17 +57,75 @@ func TestWalkRootDirectory(t *testing.T) {
 	defer os.RemoveAll(tmpB)
 	defer os.RemoveAll(tmpC)
 
-	f, err := walkRootDirectory(tmp, 0)
+	f, err := walkRootDirectoryForSounds(tmp, "")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	if len(f) != 3 {
 		t.Errorf("Root: %s\nDid not find three paths, found %d instead\n%+v",
-			os.TempDir(), len(f), f)
+			tmp, len(f), f)
 		return
 	}
 	if f[0].ID != "empty" || f[1].ID != "empty" || f[2].ID != "empty" {
-		t.Errorf("%+v contained incorrect data", f)
+		t.Errorf("%+v contained incorrect ID data", f)
+	}
+	if len(f[0].Categories) != 2 || f[0].Categories[0] != "Factorio" || f[0].Categories[1] != "Games" {
+		t.Errorf("%+v contained incorrect category data", f[0])
+	}
+	if len(f[1].Categories) == 0 || f[1].Categories[0] != "Music" {
+		t.Errorf("%+v contained incorrect category data", f[1])
+	}
+	if len(f[2].Categories) > 0 {
+		t.Errorf("%+v contained incorrect category data", f[2])
+	}
+}
+
+func TestWalkRootDirectoryForCategories(t *testing.T) {
+	tmp, err := prepareTestRoot()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	tmpA, errA := prepareTestTree(tmp, "Games/Factorio")
+	tmpB, errB := prepareTestTree(tmp, "")
+	tmpC, errC := prepareTestTree(tmp, "Music")
+	tmpD, errD := prepareTestTree(tmp, "TV Series/Star Trek")
+	if errA != nil {
+		t.Error(errA)
+	}
+	if errB != nil {
+		t.Error(errB)
+	}
+	if errC != nil {
+		t.Error(errC)
+	}
+	if errD != nil {
+		t.Error(errC)
+	}
+	defer os.RemoveAll(tmpA)
+	defer os.RemoveAll(tmpB)
+	defer os.RemoveAll(tmpC)
+	defer os.RemoveAll(tmpD)
+
+	f, err := walkRootDirectoryForCategories(tmp, "")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if len(f) != 3 {
+		t.Errorf("Root: %s\nDid not find three categories, found %d instead\n%+v",
+			tmp, len(f), f)
+		return
+	}
+	if f[0].Name != "Games" && len(f[0].Children) != 1 {
+		t.Errorf("%+v contained incorrect ID data", f[0])
+	}
+	if f[1].Name != "Music" && len(f[0].Children) != 0 {
+		t.Errorf("%+v contained incorrect ID data", f[1])
+	}
+	if f[2].Name != "TV Series" && len(f[0].Children) != 1 {
+		t.Errorf("%+v contained incorrect ID data", f[2])
 	}
 }
