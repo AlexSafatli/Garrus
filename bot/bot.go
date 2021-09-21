@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"github.com/AlexSafatli/Garrus/sound"
 	"github.com/AlexSafatli/Garrus/vc"
 	"time"
 
@@ -17,6 +18,7 @@ type Bot struct {
 	MessageCommands  []*chat.MessageCommand
 	SlashCommands    []*chat.SlashCommand
 	VoiceConnections map[string]*discordgo.VoiceConnection
+	SoundLibrary     *sound.Library
 	*discordgo.Session
 }
 
