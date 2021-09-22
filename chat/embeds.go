@@ -17,6 +17,16 @@ func SendEmbedMessage(s *discordgo.Session, channelId string, title string, desc
 	return msg
 }
 
+func SendErrorEmbedMessage(s *discordgo.Session, channelId string, title string, err error) *discordgo.Message {
+	embed := makeEmbed(title, err.Error(), map[string]string{})
+	embed.Color = discordColorRed
+	msg, err := s.ChannelMessageSendEmbed(channelId, embed)
+	if err != nil {
+		log.Println("When sending embed in channel", channelId, "ran into error =>", err)
+	}
+	return msg
+}
+
 func SendWelcomeEmbedMessage(s *discordgo.Session, channelId string, user *discordgo.User, soundInfo string) *discordgo.Message {
 	var entrance *sound.Entrance
 	var title, desc string

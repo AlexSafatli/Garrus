@@ -3,6 +3,7 @@ package chat
 import (
 	"github.com/bwmarrin/discordgo"
 	"log"
+	"time"
 )
 
 const (
@@ -38,4 +39,48 @@ func DeleteReceivedMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 			log.Printf("Could not delete message from %s", m.Author.Username)
 		}
 	}
+}
+
+// SendInteractionResponseForAction sends a response to an interaction
+func SendInteractionResponseForAction(s *discordgo.Session, i *discordgo.InteractionCreate, payload string, err error) {
+	var errResponse error
+	if err != nil {
+		errResponse = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Something went wrong: " + err.Error(),
+			},
+		})
+	} else {
+		errResponse = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: payload,
+			},
+		})
+	}
+	if errResponse != nil {
+		_, _ = s.FollowupMessageCreate(s.State.User.ID, i.Interaction, true, &discordgo.WebhookParams{
+			Content: "Something went wrong",
+		})
+	}
+	time.Sleep(time.Second * 10)
+	_ = s.InteractionResponseDelete(s.State.User.ID, i.Interaction)
+}
+
+// SendSimpleMessageResponseForAction sends a response for a message command with no fields
+func SendSimpleMessageResponseForAction(s *discordgo.Session, channelID, title, payload string, err error) {
+	SendMessageResponseForAction(s, channelID, title, payload, map[string]string{}, err)
+}
+
+// SendMessageResponseForAction sends a response for a message command
+func SendMessageResponseForAction(s *discordgo.Session, channelID, title, payload string, fields map[string]string, err error) {
+	var msg *discordgo.Message
+	if err != nil {
+		msg = SendErrorEmbedMessage(s, channelID, title, err)
+	} else {
+		msg = SendEmbedMessage(s, channelID, title, payload, fields)
+	}
+	time.Sleep(time.Second * 10)
+	_ = s.ChannelMessageDelete(channelID, msg.ID)
 }
