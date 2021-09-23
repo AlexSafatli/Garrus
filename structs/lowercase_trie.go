@@ -6,10 +6,10 @@ type LowercaseTrie struct {
 	numChildren int
 }
 
-func NewLowercaseTrie(set []string) LowercaseTrie {
+func NewLowercaseTrie(set []string) *LowercaseTrie {
 	var trie LowercaseTrie
 	trie.children = make([]LowercaseTrie, len(lowercaseAlphabet))
-	return trie
+	return &trie
 }
 
 func (t *LowercaseTrie) Add(s string) bool {

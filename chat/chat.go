@@ -61,7 +61,7 @@ func SendInteractionResponseForAction(s *discordgo.Session, i *discordgo.Interac
 	}
 	if errResponse != nil {
 		_, _ = s.FollowupMessageCreate(s.State.User.ID, i.Interaction, true, &discordgo.WebhookParams{
-			Content: "Something went wrong",
+			Content: "Something went wrong with sending a response",
 		})
 	}
 	time.Sleep(time.Second * 10)

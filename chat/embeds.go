@@ -17,6 +17,16 @@ func SendEmbedMessage(s *discordgo.Session, channelId string, title string, desc
 	return msg
 }
 
+func SendWarningEmbedMessage(s *discordgo.Session, channelId, title, warning string) *discordgo.Message {
+	embed := makeEmbed(title, warning, map[string]string{})
+	embed.Color = discordColorOrange
+	msg, err := s.ChannelMessageSendEmbed(channelId, embed)
+	if err != nil {
+		log.Println("When sending embed in channel", channelId, "ran into error =>", err)
+	}
+	return msg
+}
+
 func SendErrorEmbedMessage(s *discordgo.Session, channelId string, title string, err error) *discordgo.Message {
 	embed := makeEmbed(title, err.Error(), map[string]string{})
 	embed.Color = discordColorRed
@@ -34,9 +44,13 @@ func SendWelcomeEmbedMessage(s *discordgo.Session, channelId string, user *disco
 	if entrance == nil {
 		return nil
 	}
-	title = entrance.PersonalizedMessage + " **" + user.Username + "**"
+	if len(entrance.PersonalizedMessage) > 0 {
+		title = entrance.PersonalizedMessage + " **" + user.Username + "**"
+	} else {
+		title = "Welcome **" + user.Username + "**!"
+	}
 	if len(soundInfo) > 0 {
-		desc = soundInfo + separator + user.Mention()
+		desc = soundInfo + Separator + user.Mention()
 	} else {
 		desc = user.Mention()
 	}
@@ -49,7 +63,7 @@ func SendWelcomeEmbedMessage(s *discordgo.Session, channelId string, user *disco
 		Width:  256,
 		Height: 256,
 	}
-	e.Footer.Text += separator + fmt.Sprintf("%d", e.Color)
+	e.Footer.Text += Separator + fmt.Sprintf("%d", e.Color)
 	msg, err := s.ChannelMessageSendEmbed(channelId, e)
 	if err != nil {
 		log.Println("When sending embed in channel", channelId, "ran into error =>", err)
@@ -65,7 +79,7 @@ func makeEmbed(title string, description string, fields map[string]string) *disc
 		}
 	}
 	embed.Footer = &discordgo.MessageEmbedFooter{
-		Text: Version.Name + " " + Version.Version + separator + Version.Developer,
+		Text: Version.Name + " " + Version.Version + Separator + Version.Developer,
 	}
 	return embed
 }

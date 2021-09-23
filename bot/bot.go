@@ -69,6 +69,12 @@ func (b *Bot) initSlashCommands() {
 						Description: "The name of the sound",
 						Required:    false,
 					},
+					{
+						Type:        discordgo.ApplicationCommandOptionString,
+						Name:        "message",
+						Description: "A personalized welcome message",
+						Required:    false,
+					},
 				},
 			},
 			Function: commands.SetEntranceSlashCommand,

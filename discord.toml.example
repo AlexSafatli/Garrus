@@ -2,3 +2,4 @@
 token="token.token"
 [paths]
 sounds="./sounds"
+db="./db.json"

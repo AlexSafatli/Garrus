@@ -1,6 +1,7 @@
 package sound
 
 import (
+	"github.com/AlexSafatli/Garrus/structs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,7 @@ type Library struct {
 	RootPath   string
 	SoundMap   map[string]File
 	Categories []Category
+	Trie       *structs.LowercaseTrie
 }
 
 var library Library
@@ -35,6 +37,18 @@ func (l *Library) doConversions() []error {
 	return errs
 }
 
+func (l *Library) GetSoundNames() []string {
+	keys := make([]string, 0, len(l.SoundMap))
+	for k := range l.SoundMap {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func (l *Library) GetClosestMatchingSoundID(s string) string {
+	return l.Trie.GetWordWithPrefix(s)
+}
+
 func LoadSounds(rootPath string) error {
 	l := Library{RootPath: rootPath, SoundMap: make(map[string]File)}
 	files, err := walkRootDirectoryForSounds(rootPath, "")
@@ -53,8 +67,13 @@ func LoadSounds(rootPath string) error {
 		return err
 	}
 	l.Categories = cats
+	l.Trie = structs.NewLowercaseTrie(l.GetSoundNames())
 	library = l
 	return nil
+}
+
+func GetLibrary() *Library {
+	return &library
 }
 
 func GetSounds() *map[string]File {
