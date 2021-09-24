@@ -6,6 +6,7 @@ import (
 	"github.com/AlexSafatli/Garrus/chat"
 	"github.com/AlexSafatli/Garrus/sound"
 	"github.com/bwmarrin/discordgo"
+	"log"
 )
 
 // OnGuildVoiceJoinHandler is a very specific use-case handler function that controls follow and entrance behavior
@@ -42,6 +43,10 @@ func OnGuildVoiceJoinHandler(b *bot.Bot) func(*discordgo.Session, *discordgo.Voi
 				err = sound.PlayDCA(file.FilePath, b.VoiceConnections[vs.GuildID])
 				if err != nil {
 					return
+				}
+				file.NumberPlays++
+				if err = sound.GetLibrary().SetSoundData(file, bot.Db); err != nil {
+					log.Fatalln("When updating sound =>" + err.Error())
 				}
 				soundInfo = fmt.Sprintf("Played `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
 				chat.SendWelcomeEmbedMessage(b.Session, vs.ChannelID, u, soundInfo)
