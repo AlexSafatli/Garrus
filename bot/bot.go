@@ -46,6 +46,10 @@ func (b *Bot) initMessageCommands() {
 			Command:  ".entrance",
 			Function: commands.SetEntranceMessageCommand,
 		},
+		{
+			Command:  ".search",
+			Function: commands.SearchSoundsMessageCommand,
+		},
 	}
 }
 
@@ -78,6 +82,21 @@ func (b *Bot) initSlashCommands() {
 				},
 			},
 			Function: commands.SetEntranceSlashCommand,
+		},
+		{
+			Command: &discordgo.ApplicationCommand{
+				Name:        "searchfor",
+				Description: "Lists all sound files matching a query",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionString,
+						Name:        "query",
+						Description: "A search query",
+						Required:    true,
+					},
+				},
+			},
+			Function: commands.SearchSoundsSlashCommand,
 		},
 	}
 }

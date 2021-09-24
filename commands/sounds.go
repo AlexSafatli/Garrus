@@ -1,8 +1,8 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
-	"github.com/AlexSafatli/Garrus/bot"
 	"github.com/AlexSafatli/Garrus/chat"
 	"github.com/AlexSafatli/Garrus/sound"
 	"github.com/bwmarrin/discordgo"
@@ -13,14 +13,7 @@ const (
 	searchSoundsTitle = "Search Sounds"
 )
 
-// SearchSoundsMessageCommand returns the collection of sounds matching a query
-func SearchSoundsMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
-	var query string
-	var possibilities []string
-	i := strings.Index(m.Content, " ")
-	if i > 0 {
-		query = m.Content[i+1:]
-	}
+func searchSounds(query string) (possibilities []string) {
 	closest := sound.GetLibrary().GetClosestMatchingSoundID(query)
 	if len(closest) > 0 {
 		possibilities = append(possibilities, closest)
@@ -30,6 +23,18 @@ func SearchSoundsMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate
 			possibilities = append(possibilities, closest)
 		}
 	}
+	return
+}
+
+// SearchSoundsMessageCommand returns the collection of sounds matching a query
+func SearchSoundsMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
+	var query string
+	var possibilities []string
+	i := strings.Index(m.Content, " ")
+	if i > 0 {
+		query = m.Content[i+1:]
+	}
+	possibilities = searchSounds(query)
 	mb := chat.MessageBuilder{}
 	_ = mb.Write(fmt.Sprintf("Found **%d** possible sounds f or query `%s`%s%s.\n\n", len(possibilities), query, chat.Separator, m.Author.Mention()))
 	if len(possibilities) > 0 {
@@ -46,18 +51,30 @@ func SearchSoundsMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate
 
 // SearchSoundsSlashCommand returns the collection of sounds matching a query
 func SearchSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	var query, pmsg string
-	if len(i.ApplicationCommandData().Options) == 0 {
-		err := sound.DeleteEntranceForUser(i.User.ID, bot.Db)
-		chat.SendInteractionResponseForAction(s, i, "Cleared your entrance.", err)
+	var query string
+	var possibilities []string
+	args := i.ApplicationCommandData().Options
+	if len(args) == 1 {
+		query = args[0].StringValue()
+	} else {
+		chat.SendErrorEmbedMessage(s, i.ChannelID, searchSoundsTitle, errors.New("need a query to search for"))
 		return
 	}
-	args := i.ApplicationCommandData().Options
-	if len(args) >= 1 {
-		soundID = args[0].StringValue()
-	} else if len(args) >= 2 {
-		pmsg = args[1].StringValue()
+	if err := chat.SendInteractionAckForAction(s, i, nil); err != nil {
+		return
 	}
-	err := sound.SetEntranceForUser(i.User.ID, soundID, pmsg, bot.Db)
-	chat.SendInteractionResponseForAction(s, i, fmt.Sprintf("Set your entrance to `%s`.", soundID), err)
+	defer chat.DeleteInteractionResponse(s, i)
+	possibilities = searchSounds(query)
+	mb := chat.MessageBuilder{}
+	_ = mb.Write(fmt.Sprintf("Found **%d** possible sounds f or query `%s`%s%s.\n\n", len(possibilities), query, chat.Separator, i.User.Mention()))
+	if len(possibilities) > 0 {
+		for _, k := range possibilities {
+			_ = mb.Write("`?" + k + "` ")
+		}
+		for _, msg := range mb.GetMessageStrings() {
+			chat.SendEmbedInteractionResponse(s, i, searchSoundsTitle, msg, map[string]string{})
+		}
+	} else {
+		chat.SendWarningEmbedInteractionResponse(s, i, searchSoundsTitle, "Could not find any sounds for query `"+query+"`.")
+	}
 }
