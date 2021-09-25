@@ -29,6 +29,8 @@ const (
 	discordColorDarkGrey   = 9936031
 	discordColorLightGrey  = 12370112
 	discordColorDarkNavy   = 2899536
+
+	botMessageSearchLimit = 50
 )
 
 // DeleteReceivedMessage takes a created message and deletes it if it is not private
@@ -41,6 +43,27 @@ func DeleteReceivedMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+// DeleteBotMessages deletes all bot messages found in the given channel
+func DeleteBotMessages(s *discordgo.Session, channelID, aroundID string) {
+	msgs, err := s.ChannelMessages(channelID, botMessageSearchLimit, "", "", aroundID)
+	if err != nil {
+		log.Printf("Could not find bot messages around message ID %s in channel %s", aroundID, channelID)
+		return
+	}
+	var botMessageIDs []string
+	for _, m := range msgs {
+		if m.Author.ID == s.State.User.ID {
+			botMessageIDs = append(botMessageIDs, m.ID)
+		}
+	}
+	if len(botMessageIDs) > 0 {
+		if err = s.ChannelMessagesBulkDelete(channelID, botMessageIDs); err != nil {
+			log.Printf("Could not bulk delete all found %d bot messages in channel %s => %s", len(botMessageIDs), channelID, err)
+		}
+	}
+}
+
+// DeleteInteractionResponse deletes a response sent from an interaction
 func DeleteInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	time.Sleep(time.Second * 10)
 	_ = s.InteractionResponseDelete(s.State.User.ID, i.Interaction)

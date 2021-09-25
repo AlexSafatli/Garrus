@@ -10,10 +10,10 @@ import (
 
 // Bot encompasses a DiscordGo Bot
 type Bot struct {
-	Start            time.Time
-	MessageCommands  []*chat.MessageCommand
-	SlashCommands    []*chat.SlashCommand
-	VoiceConnections map[string]*discordgo.VoiceConnection
+	Start                   time.Time
+	MessageCommands         []*chat.MessageCommand
+	SlashCommands           []*chat.SlashCommand
+	lastSentEntranceMessage map[string]string
 	*discordgo.Session
 }
 
@@ -24,7 +24,7 @@ func NewBot(token string) (b *Bot, err error) {
 		return
 	}
 	b = &Bot{Start: time.Now(), Session: discord}
-	b.VoiceConnections = make(map[string]*discordgo.VoiceConnection)
+	b.lastSentEntranceMessage = make(map[string]string)
 	b.initMessageCommands()
 	b.initSlashCommands()
 	b.routeHandlers()
@@ -44,6 +44,10 @@ func (b *Bot) initMessageCommands() {
 		{
 			Command:  ".search",
 			Function: SearchSoundsMessageCommand,
+		},
+		{
+			Command:  "?",
+			Function: PlaySoundMessageCommand,
 		},
 	}
 }
@@ -106,6 +110,7 @@ func (b *Bot) initSlashCommands() {
 					},
 				},
 			},
+			Function: PlaySoundSlashCommand,
 		},
 	}
 }
@@ -113,8 +118,6 @@ func (b *Bot) initSlashCommands() {
 func (b *Bot) routeHandlers() {
 	b.AddHandler(chat.NewMessageCommandRouteHandler(b.Session, b.MessageCommands))
 	b.AddHandler(chat.NewSlashCommandRouteHandler(b.Session, b.SlashCommands))
-	b.AddHandler(OnPlayMessageCommandReceivedHandler(b))
-	b.AddHandler(OnPlaySlashCommandReceivedHandler(b))
 	b.AddHandler(OnGuildVoiceJoinHandler(b))
 }
 

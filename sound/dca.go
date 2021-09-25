@@ -4,6 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/dca"
 	"io"
+	"log"
 	"os"
 	"time"
 )
@@ -26,6 +27,9 @@ func saveSoundFileToDCA(source, target string) error {
 }
 
 func PlayDCA(path string, vc *discordgo.VoiceConnection) error {
+	if vc == nil {
+		log.Fatalln("Empty voice connection given")
+	}
 	f, err := os.Open(path)
 	if err != nil {
 		return err

@@ -6,25 +6,52 @@ import (
 	"github.com/AlexSafatli/Garrus/sound"
 	"github.com/bwmarrin/discordgo"
 	"log"
-	"strings"
 )
 
-func openConnection(b *Bot, channelID, guildID string) error {
-	existing, ok := b.VoiceConnections[guildID]
+func openConnection(s *discordgo.Session, channelID, guildID string) error {
+	existing, ok := s.VoiceConnections[guildID]
 	if ok && existing.ChannelID != channelID || !ok {
-		vc, err := b.Session.ChannelVoiceJoin(guildID, channelID, false, true)
+		_, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
 		if err != nil {
 			return err
 		}
-		b.VoiceConnections[guildID] = vc
 	}
 	return nil
 }
 
-func closeConnectionIfAlone(b *Bot, s *discordgo.Session, vs *discordgo.VoiceStateUpdate) {
-	//if len(usersFound) == 1 {
-	//	b.VoiceConnections[vs.GuildID].Close()
-	//}
+func closeConnectionOrChangeChannelsIfAlone(s *discordgo.Session, guildID string) {
+	if s.VoiceConnections[guildID] == nil {
+		return
+	}
+	g, err := s.State.Guild(guildID)
+	if err != nil {
+		return
+	}
+	var totalUsersFound int
+	var usersFound map[string]int
+	usersFound = make(map[string]int)
+	for _, vs := range g.VoiceStates {
+		if vs.UserID != s.State.User.ID {
+			usersFound[vs.ChannelID]++
+			totalUsersFound++
+		}
+	}
+	if totalUsersFound == 0 {
+		if err = s.VoiceConnections[guildID].Disconnect(); err != nil {
+			s.VoiceConnections[guildID].Close()
+		}
+	} else {
+		var mostUsers int
+		var channelIDWithMostUsers string
+		for k, v := range usersFound {
+			if v > mostUsers {
+				channelIDWithMostUsers = k
+			}
+		}
+		if channelIDWithMostUsers != s.VoiceConnections[guildID].ChannelID {
+			_ = s.VoiceConnections[guildID].ChangeChannel(channelIDWithMostUsers, false, true)
+		}
+	}
 }
 
 func getMainChannelIDForGuild(s *discordgo.Session, guildID string) string {
@@ -49,11 +76,6 @@ func getMainChannelIDForGuild(s *discordgo.Session, guildID string) string {
 // OnGuildVoiceJoinHandler is a very specific use-case handler function that controls follow and entrance behavior
 func OnGuildVoiceJoinHandler(b *Bot) func(*discordgo.Session, *discordgo.VoiceStateUpdate) {
 	return func(s *discordgo.Session, vs *discordgo.VoiceStateUpdate) {
-		g, err := s.Guild(vs.GuildID)
-		if err != nil {
-			return
-		}
-		defer closeConnectionIfAlone(b, g, vs)
 		if vs.UserID == s.State.User.ID { // move done by bot
 			return
 		}
@@ -61,9 +83,11 @@ func OnGuildVoiceJoinHandler(b *Bot) func(*discordgo.Session, *discordgo.VoiceSt
 		if err != nil {
 			return
 		}
-		log.Println("Move detected for user", u, "from state", vs.BeforeUpdate, "to channel", vs.ChannelID)
+		if len(vs.ChannelID) == 0 {
+			defer closeConnectionOrChangeChannelsIfAlone(s, vs.GuildID)
+		}
 		if len(vs.ChannelID) > 0 && (vs.BeforeUpdate == nil || vs.BeforeUpdate.ChannelID != vs.ChannelID) {
-			if err = openConnection(b, vs.ChannelID, vs.GuildID); err != nil {
+			if err = openConnection(s, vs.ChannelID, vs.GuildID); err != nil {
 				return
 			}
 			entrance := sound.GetEntranceForUser(vs.UserID)
@@ -75,8 +99,13 @@ func OnGuildVoiceJoinHandler(b *Bot) func(*discordgo.Session, *discordgo.VoiceSt
 				defer db.Close()
 				var file = sound.GetLibrary().SoundMap[entrance.SoundID]
 				var soundInfo string
+				channelID := getMainChannelIDForGuild(s, vs.GuildID)
 				soundInfo = fmt.Sprintf("Played `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
-				chat.SendWelcomeEmbedMessage(b.Session, getMainChannelIDForGuild(s, vs.GuildID), u, soundInfo)
+				if lastMessageID, ok := b.lastSentEntranceMessage[vs.GuildID]; ok {
+					chat.DeleteBotMessages(s, channelID, lastMessageID)
+				}
+				m := chat.SendWelcomeEmbedMessage(b.Session, channelID, u, soundInfo)
+				b.lastSentEntranceMessage[vs.GuildID] = m.ID // keep track of the last sent entrance message
 				err = sound.PlayDCA(file.FilePath, b.VoiceConnections[vs.GuildID])
 				if err != nil {
 					return
@@ -86,32 +115,6 @@ func OnGuildVoiceJoinHandler(b *Bot) func(*discordgo.Session, *discordgo.VoiceSt
 					log.Fatalln("When updating sound => " + err.Error())
 				}
 			}
-		}
-	}
-}
-
-// OnPlayMessageCommandReceivedHandler is another specific use-case handler function to handle play chat commands that require more than just a Discord session
-func OnPlayMessageCommandReceivedHandler(b *Bot) func(*discordgo.Session, *discordgo.MessageCreate) {
-	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		if strings.HasPrefix(m.Content, "?") && len(m.Content) > 1 {
-			if err := openConnection(b, m.ChannelID, m.GuildID); err != nil {
-				log.Fatal(err)
-				return
-			}
-			PlaySoundMessageCommand(s, b.VoiceConnections[m.GuildID], m)
-			chat.DeleteReceivedMessage(s, m)
-		}
-	}
-}
-
-// OnPlaySlashCommandReceivedHandler is another specific use-case handler function to handle play slash commands that require more than just a Discord session
-func OnPlaySlashCommandReceivedHandler(b *Bot) func(*discordgo.Session, *discordgo.InteractionCreate) {
-	return func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if i.ApplicationCommandData().Name == "sound" {
-			if err := openConnection(b, i.ChannelID, i.GuildID); err != nil {
-				return
-			}
-			PlaySoundSlashCommand(s, b.VoiceConnections[i.GuildID], i)
 		}
 	}
 }

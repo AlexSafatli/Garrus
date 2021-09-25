@@ -143,7 +143,12 @@ func SearchSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCrea
 }
 
 // PlaySoundMessageCommand plays a sound in a voice channel
-func PlaySoundMessageCommand(s *discordgo.Session, vc *discordgo.VoiceConnection, m *discordgo.MessageCreate) {
+func PlaySoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if s.VoiceConnections[m.GuildID] == nil {
+		// Not in a voice channel
+		chat.SendWarningEmbedMessage(s, m.ChannelID, playSoundTitle, "I am not in a voice channel. Join one first!")
+		return
+	}
 	var query = m.Content[1:] // assumes '?' (or one character) start prefix
 	var library = sound.GetLibrary()
 	if library.Contains(query) {
@@ -153,7 +158,7 @@ func PlaySoundMessageCommand(s *discordgo.Session, vc *discordgo.VoiceConnection
 		}
 		defer db.Close()
 		file := library.SoundMap[query]
-		err = sound.PlayDCA(file.FilePath, vc)
+		err = sound.PlayDCA(file.FilePath, s.VoiceConnections[m.GuildID])
 		if err != nil {
 			return
 		}
@@ -167,12 +172,17 @@ func PlaySoundMessageCommand(s *discordgo.Session, vc *discordgo.VoiceConnection
 }
 
 // PlaySoundSlashCommand plays a sound in a voice channel
-func PlaySoundSlashCommand(s *discordgo.Session, vc *discordgo.VoiceConnection, i *discordgo.InteractionCreate) {
+func PlaySoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var query string
 	if err := chat.SendInteractionAckForAction(s, i, nil); err != nil {
 		return
 	}
 	defer chat.DeleteInteractionResponse(s, i)
+	if s.VoiceConnections[i.GuildID] == nil {
+		// Not in a voice channel
+		chat.SendWarningEmbedInteractionResponse(s, i, playSoundTitle, "I am not in a voice channel. Join one first!")
+		return
+	}
 	args := i.ApplicationCommandData().Options
 	if len(args) == 1 {
 		query = args[0].StringValue()
@@ -188,7 +198,7 @@ func PlaySoundSlashCommand(s *discordgo.Session, vc *discordgo.VoiceConnection, 
 		}
 		defer db.Close()
 		file := library.SoundMap[query]
-		err = sound.PlayDCA(file.FilePath, vc)
+		err = sound.PlayDCA(file.FilePath, s.VoiceConnections[i.GuildID])
 		if err != nil {
 			return
 		}
