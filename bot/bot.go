@@ -2,12 +2,9 @@ package bot
 
 import (
 	"fmt"
-	"github.com/AlexSafatli/Garrus/vc"
 	"time"
 
 	"github.com/AlexSafatli/Garrus/chat"
-	"github.com/AlexSafatli/Garrus/commands"
-
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -30,9 +27,6 @@ func NewBot(token string) (b *Bot, err error) {
 	b.initMessageCommands()
 	b.initSlashCommands()
 	b.routeHandlers()
-	if err = b.registerSlashCommands(); err != nil {
-		return
-	}
 	return
 }
 
@@ -40,15 +34,15 @@ func (b *Bot) initMessageCommands() {
 	b.MessageCommands = []*chat.MessageCommand{
 		{
 			Command:  ".about",
-			Function: commands.AboutMessageCommand,
+			Function: AboutMessageCommand,
 		},
 		{
 			Command:  ".entrance",
-			Function: commands.SetEntranceMessageCommand,
+			Function: SetEntranceMessageCommand,
 		},
 		{
 			Command:  ".search",
-			Function: commands.SearchSoundsMessageCommand,
+			Function: SearchSoundsMessageCommand,
 		},
 	}
 }
@@ -60,7 +54,7 @@ func (b *Bot) initSlashCommands() {
 				Name:        "about",
 				Description: "About this bot",
 			},
-			Function: commands.AboutSlashCommand,
+			Function: AboutSlashCommand,
 		},
 		{
 			Command: &discordgo.ApplicationCommand{
@@ -81,7 +75,7 @@ func (b *Bot) initSlashCommands() {
 					},
 				},
 			},
-			Function: commands.SetEntranceSlashCommand,
+			Function: SetEntranceSlashCommand,
 		},
 		{
 			Command: &discordgo.ApplicationCommand{
@@ -96,7 +90,21 @@ func (b *Bot) initSlashCommands() {
 					},
 				},
 			},
-			Function: commands.SearchSoundsSlashCommand,
+			Function: SearchSoundsSlashCommand,
+		},
+		{
+			Command: &discordgo.ApplicationCommand{
+				Name:        "sound",
+				Description: "Play a sound file by name",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionString,
+						Name:        "sound",
+						Description: "A sound file",
+						Required:    true,
+					},
+				},
+			},
 		},
 	}
 }
@@ -104,10 +112,12 @@ func (b *Bot) initSlashCommands() {
 func (b *Bot) routeHandlers() {
 	b.AddHandler(chat.NewMessageCommandRouteHandler(b.Session, b.MessageCommands))
 	b.AddHandler(chat.NewSlashCommandRouteHandler(b.Session, b.SlashCommands))
-	b.AddHandler(vc.OnGuildVoiceJoinHandler(b))
+	b.AddHandler(OnPlayMessageCommandReceivedHandler(b))
+	b.AddHandler(OnPlaySlashCommandReceivedHandler(b))
+	b.AddHandler(OnGuildVoiceJoinHandler(b))
 }
 
-func (b *Bot) registerSlashCommands() error {
+func (b *Bot) RegisterSlashCommands() error {
 	for _, c := range b.SlashCommands {
 		_, err := b.Session.ApplicationCommandCreate(b.Session.State.User.ID, "", c.Command)
 		if err != nil {

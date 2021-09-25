@@ -54,6 +54,15 @@ func SendWarningEmbedInteractionResponse(s *discordgo.Session, i *discordgo.Inte
 	return m
 }
 
+func SendErrorEmbedInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, title string, err error) *discordgo.Message {
+	embed := makeEmbed(title, err.Error(), map[string]string{})
+	embed.Color = discordColorRed
+	m, _ := s.FollowupMessageCreate(s.State.User.ID, i.Interaction, true, &discordgo.WebhookParams{
+		Embeds: []*discordgo.MessageEmbed{embed},
+	})
+	return m
+}
+
 func SendWelcomeEmbedMessage(s *discordgo.Session, channelId string, user *discordgo.User, soundInfo string) *discordgo.Message {
 	var entrance *sound.Entrance
 	var title, desc string
