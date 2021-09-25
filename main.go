@@ -24,25 +24,33 @@ func main() {
 	configValues := config.LoadConfigs()
 	log.Println("Loaded config")
 
-	// Load JSON database
-	db, err := bot.LoadJsonDatabase(configValues.JsonDbPath)
+	// Load flat file database
+	bot.SetDatabasePath(configValues.DbPath)
+	db, err := bot.LoadDatabase()
 	if err != nil {
 		log.Fatalln("Could not load database", err)
 	}
+	log.Println("Loaded database from " + configValues.DbPath)
 
 	// Load entrances
 	err = sound.LoadEntrances(db)
 	if err != nil {
 		log.Fatalln("Could not load entrances from database", err)
 	}
-	log.Println("Loaded JSON database from " + configValues.JsonDbPath)
 
-	// Load sounds
-	err = sound.LoadSounds(configValues.SoundsPath)
-	if err != nil {
-		log.Fatalln("Could not load/convert sounds from " + configValues.SoundsPath)
+	// Load sounds and sound data
+	if err = sound.LoadSounds(configValues.SoundsPath); err != nil {
+		log.Fatalln("Could not load/convert sounds from "+configValues.SoundsPath, err)
+	}
+	if err = sound.GetLibrary().LoadSoundData(db); err != nil {
+		log.Fatalln("Could not load sound data from database", err)
 	}
 	log.Println("Loaded sounds from " + configValues.SoundsPath)
+
+	// Close database for now
+	if err = db.Close(); err != nil {
+		log.Fatalln("Could not properly close database", err)
+	}
 
 	// Load bot
 	discord, _ := bot.NewBot("Bot " + configValues.DiscordToken)

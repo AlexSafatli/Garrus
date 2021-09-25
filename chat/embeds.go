@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"fmt"
 	"github.com/AlexSafatli/Garrus/sound"
 	"log"
 
@@ -83,13 +82,9 @@ func SendWelcomeEmbedMessage(s *discordgo.Session, channelId string, user *disco
 	e := makeEmbed(title, desc, map[string]string{
 		RandomString(Whats): "I play sounds and automate things. Type `.help` for more.",
 	})
-	e.Color = ToColor(user.Username)
 	e.Thumbnail = &discordgo.MessageEmbedThumbnail{
-		URL:    user.AvatarURL("8"),
-		Width:  256,
-		Height: 256,
+		URL: user.AvatarURL("2048"),
 	}
-	e.Footer.Text += Separator + fmt.Sprintf("%d", e.Color)
 	msg, err := s.ChannelMessageSendEmbed(channelId, e)
 	if err != nil {
 		log.Println("When sending embed in channel", channelId, "ran into error =>", err)

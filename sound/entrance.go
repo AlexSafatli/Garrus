@@ -2,7 +2,8 @@ package sound
 
 import (
 	"encoding/json"
-	scribble "github.com/nanobox-io/golang-scribble"
+	"fmt"
+	"github.com/boltdb/bolt"
 )
 
 type Entrance struct {
@@ -31,9 +32,21 @@ func getEntranceIndex(userID string) int {
 	return -1
 }
 
-func SetEntranceForUser(userID, soundID, msg string, db *scribble.Driver) error {
+func SetEntranceForUser(userID, soundID, msg string, db *bolt.DB) error {
+	var err error
 	e := Entrance{UserID: userID, SoundID: soundID, PersonalizedMessage: msg}
-	if err := db.Write("entrance", userID, e); err != nil {
+	err = db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("entrance"))
+		if b == nil {
+			return fmt.Errorf("get bucket: %+v", b)
+		}
+		buf, err := json.Marshal(e)
+		if err != nil {
+			return err
+		}
+		return b.Put([]byte(userID), buf)
+	})
+	if err != nil {
 		return err
 	}
 	e_ := GetEntranceForUser(userID)
@@ -45,8 +58,15 @@ func SetEntranceForUser(userID, soundID, msg string, db *scribble.Driver) error 
 	return nil
 }
 
-func DeleteEntranceForUser(userID string, db *scribble.Driver) error {
-	err := db.Delete("entrance", userID)
+func DeleteEntranceForUser(userID string, db *bolt.DB) error {
+	var err error
+	err = db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("entrance"))
+		if b == nil {
+			return fmt.Errorf("get bucket: %s", err)
+		}
+		return b.Delete([]byte(userID))
+	})
 	if err != nil {
 		return err
 	}
@@ -58,16 +78,20 @@ func DeleteEntranceForUser(userID string, db *scribble.Driver) error {
 	return nil
 }
 
-func LoadEntrances(db *scribble.Driver) error {
-	var err error
-	var e []string
-	e, err = db.ReadAll("entrance")
-	for _, r := range e {
-		loadedEntrance := Entrance{}
-		if err = json.Unmarshal([]byte(r), &loadedEntrance); err != nil {
-			return err
+func LoadEntrances(db *bolt.DB) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte("entrance"))
+		if err != nil {
+			return fmt.Errorf("create bucket: %s", err)
 		}
-		entrances = append(entrances, loadedEntrance)
-	}
-	return err
+		err = b.ForEach(func(k, v []byte) error {
+			ent := Entrance{}
+			if err = json.Unmarshal(v, &ent); err != nil {
+				return err
+			}
+			entrances = append(entrances, ent)
+			return nil
+		})
+		return err
+	})
 }

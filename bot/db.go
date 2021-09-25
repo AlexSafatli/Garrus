@@ -1,32 +1,17 @@
 package bot
 
 import (
-	"github.com/nanobox-io/golang-scribble"
-	"log"
-	"os"
-	"path/filepath"
+	"github.com/boltdb/bolt"
 )
 
 var (
-	Db          *scribble.Driver
-	collections = []string{"entrance", "sound"}
+	dbPath string
 )
 
-func LoadJsonDatabase(dir string) (*scribble.Driver, error) {
-	if Db != nil {
-		return Db, nil
-	}
-	Db, err := scribble.New(dir, nil)
-	for _, c := range collections {
-		// Make sure a json file exists for all collections
-		var jsonPath = filepath.Join(dir, c+".json")
-		if _, err := os.Stat(jsonPath); err != nil {
-			empty, err := os.Create(jsonPath)
-			if err != nil {
-				log.Fatal(err)
-			}
-			_ = empty.Close()
-		}
-	}
-	return Db, err
+func SetDatabasePath(path string) {
+	dbPath = path
+}
+
+func LoadDatabase() (*bolt.DB, error) {
+	return bolt.Open(dbPath, 0600, nil)
 }

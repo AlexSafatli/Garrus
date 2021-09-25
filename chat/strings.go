@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"hash/fnv"
 	"math/rand"
 	"strings"
 )
@@ -51,15 +50,6 @@ func (b *MessageBuilder) GetMessageStrings() []string {
 func (b *MessageBuilder) Reset() {
 	b.msgStrings = make([]string, 0)
 	b.Builder.Reset()
-}
-
-func ToColor(s string) int {
-	h := fnv.New32a()
-	_, err := h.Write([]byte(s))
-	if err != nil {
-		return 0
-	}
-	return int(h.Sum32())
 }
 
 func RandomString(s []string) string {

@@ -2,8 +2,8 @@ package sound
 
 import (
 	"encoding/json"
-	scribble "github.com/nanobox-io/golang-scribble"
-	"log"
+	"fmt"
+	"github.com/boltdb/bolt"
 )
 
 type File struct {
@@ -19,8 +19,19 @@ type Category struct {
 	Children []Category
 }
 
-func (l *Library) SetSoundData(sound File, db *scribble.Driver) error {
-	if err := db.Write("sound", sound.ID, sound); err != nil {
+func (l *Library) SetSoundData(sound *File, db *bolt.DB) error {
+	err := db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("sound"))
+		if b == nil {
+			return fmt.Errorf("get bucket: %+v", b)
+		}
+		buf, err := json.Marshal(*sound)
+		if err != nil {
+			return err
+		}
+		return b.Put([]byte(sound.ID), buf)
+	})
+	if err != nil {
 		return err
 	}
 	existing := l.SoundMap[sound.ID]
@@ -30,28 +41,37 @@ func (l *Library) SetSoundData(sound File, db *scribble.Driver) error {
 	return nil
 }
 
-func (l *Library) LoadSoundData(db *scribble.Driver) error {
+func (l *Library) LoadSoundData(db *bolt.DB) error {
 	var err error
-	var s []string
-	s, err = db.ReadAll("sound")
-	for _, r := range s {
-		loadedSound := File{}
-		if err = json.Unmarshal([]byte(r), &loadedSound); err != nil {
-			log.Fatalln("Failure loading sounds")
-			return err
+	var s []File
+	err = db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte("sound"))
+		if err != nil {
+			return fmt.Errorf("create bucket: %s", err)
 		}
-		if existing, ok := l.SoundMap[loadedSound.ID]; !ok {
+		err = b.ForEach(func(k, v []byte) error {
+			sf := File{}
+			if err = json.Unmarshal(v, &sf); err != nil {
+				return err
+			}
+			s = append(s, sf)
+			return nil
+		})
+		return err
+	})
+	for _, sf := range s {
+		if existing, ok := l.SoundMap[sf.ID]; !ok {
 			continue
 		} else {
-			if loadedSound.FilePath != existing.FilePath {
-				loadedSound.FilePath = existing.FilePath
-				if err := db.Write("sound", loadedSound.ID, loadedSound); err != nil {
+			if sf.FilePath != existing.FilePath {
+				sf.FilePath = existing.FilePath
+				if err := l.SetSoundData(&sf, db); err != nil {
 					return err
 				}
 			}
-			existing.NumberPlays = loadedSound.NumberPlays
-			existing.ExcludedFromRandom = loadedSound.ExcludedFromRandom
-			l.SoundMap[loadedSound.ID] = loadedSound
+			existing.NumberPlays = sf.NumberPlays
+			existing.ExcludedFromRandom = sf.ExcludedFromRandom
+			l.SoundMap[sf.ID] = &sf
 		}
 	}
 	return err

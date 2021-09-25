@@ -16,8 +16,7 @@ func NewLowercaseTrie(set []string) *LowercaseTrie {
 }
 
 func (t *LowercaseTrie) Add(s string) bool {
-	first := rune(s[0])
-	index := sliceIndex(first, lowercaseAlphabet)
+	index := sliceIndex(rune(s[0]), lowercaseAlphabet)
 	if index < 0 {
 		return false
 	}

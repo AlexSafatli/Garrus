@@ -43,11 +43,16 @@ func AboutSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // SetEntranceMessageCommand sets an entrance for a user
 func SetEntranceMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	var soundID, content, pmsg string
+	db, err := LoadDatabase()
+	if err != nil {
+		log.Fatalln("Could not load database", err)
+	}
+	defer db.Close()
 	i := strings.Index(m.Content, " ")
 	if i > 0 {
 		content = m.Content[i+1:]
 	} else {
-		err := sound.DeleteEntranceForUser(m.Author.ID, Db)
+		err = sound.DeleteEntranceForUser(m.Author.ID, db)
 		chat.SendSimpleMessageResponseForAction(s, m.ChannelID, entranceTitle, "Cleared your entrance.", err)
 		return
 	}
@@ -57,15 +62,20 @@ func SetEntranceMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate)
 	} else if len(args) >= 2 {
 		pmsg = args[1]
 	}
-	err := sound.SetEntranceForUser(m.Author.ID, soundID, pmsg, Db)
+	err = sound.SetEntranceForUser(m.Author.ID, soundID, pmsg, db)
 	chat.SendSimpleMessageResponseForAction(s, m.ChannelID, entranceTitle, fmt.Sprintf("Set your entrance to `%s`.", soundID), err)
 }
 
 // SetEntranceSlashCommand sets an entrance for a user
 func SetEntranceSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var soundID, pmsg string
+	db, err := LoadDatabase()
+	if err != nil {
+		log.Fatalln("Could not load database", err)
+	}
+	defer db.Close()
 	if len(i.ApplicationCommandData().Options) == 0 {
-		err := sound.DeleteEntranceForUser(i.User.ID, Db)
+		err := sound.DeleteEntranceForUser(i.Member.User.ID, db)
 		chat.SendInteractionResponseForAction(s, i, "Cleared your entrance.", err)
 		return
 	}
@@ -75,7 +85,7 @@ func SetEntranceSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreat
 	} else if len(args) >= 2 {
 		pmsg = args[1].StringValue()
 	}
-	err := sound.SetEntranceForUser(i.User.ID, soundID, pmsg, Db)
+	err = sound.SetEntranceForUser(i.Member.User.ID, soundID, pmsg, db)
 	chat.SendInteractionResponseForAction(s, i, fmt.Sprintf("Set your entrance to `%s`.", soundID), err)
 }
 
@@ -135,19 +145,24 @@ func SearchSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCrea
 // PlaySoundMessageCommand plays a sound in a voice channel
 func PlaySoundMessageCommand(s *discordgo.Session, vc *discordgo.VoiceConnection, m *discordgo.MessageCreate) {
 	var query = m.Content[1:] // assumes '?' (or one character) start prefix
-	var closest = sound.GetLibrary().GetClosestMatchingSoundID(query)
-	if closest == query {
-		file := sound.GetLibrary().SoundMap[query]
-		err := sound.PlayDCA(file.FilePath, vc)
+	var library = sound.GetLibrary()
+	if library.Contains(query) {
+		db, err := LoadDatabase()
+		if err != nil {
+			log.Fatalln("Could not load database", err)
+		}
+		defer db.Close()
+		file := library.SoundMap[query]
+		err = sound.PlayDCA(file.FilePath, vc)
 		if err != nil {
 			return
 		}
 		file.NumberPlays++
-		if err = sound.GetLibrary().SetSoundData(file, Db); err != nil {
-			log.Fatalln("When updating sound =>" + err.Error())
+		if err = library.SetSoundData(file, db); err != nil {
+			log.Fatalln("When updating sound => " + err.Error())
 		}
 	} else {
-		chat.SendWarningEmbedMessage(s, m.ChannelID, playSoundTitle, "Could not find a sound by name `"+query+"`. Did you mean `"+closest+"`?")
+		chat.SendWarningEmbedMessage(s, m.ChannelID, playSoundTitle, "Could not find a sound by name `"+query+"`. Did you mean `"+library.GetClosestMatchingSoundID(query)+"`?")
 	}
 }
 
@@ -165,19 +180,24 @@ func PlaySoundSlashCommand(s *discordgo.Session, vc *discordgo.VoiceConnection, 
 		chat.SendErrorEmbedInteractionResponse(s, i, playSoundTitle, errors.New("need a sound to play"))
 		return
 	}
-	var closest = sound.GetLibrary().GetClosestMatchingSoundID(query)
-	if closest == query {
-		file := sound.GetLibrary().SoundMap[query]
-		err := sound.PlayDCA(file.FilePath, vc)
+	var library = sound.GetLibrary()
+	if library.Contains(query) {
+		db, err := LoadDatabase()
+		if err != nil {
+			log.Fatalln("Could not load database", err)
+		}
+		defer db.Close()
+		file := library.SoundMap[query]
+		err = sound.PlayDCA(file.FilePath, vc)
 		if err != nil {
 			return
 		}
 		file.NumberPlays++
-		if err = sound.GetLibrary().SetSoundData(file, Db); err != nil {
-			log.Fatalln("When updating sound =>" + err.Error())
+		if err = library.SetSoundData(file, db); err != nil {
+			log.Fatalln("When updating sound => " + err.Error())
 		}
 		chat.SendEmbedInteractionResponse(s, i, playSoundTitle, "Played sound `"+query+"`.", map[string]string{})
 	} else {
-		chat.SendWarningEmbedInteractionResponse(s, i, playSoundTitle, "Could not find a sound by name `"+query+"`. Did you mean `"+closest+"`?")
+		chat.SendWarningEmbedInteractionResponse(s, i, playSoundTitle, "Could not find a sound by name `"+query+"`. Did you mean `"+library.GetClosestMatchingSoundID(query)+"`?")
 	}
 }

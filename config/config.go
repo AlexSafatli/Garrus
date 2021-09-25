@@ -7,12 +7,12 @@ const (
 	basePath     = "."
 	discordToken = "discord.token"
 	soundsPath   = "paths.sounds"
-	jsonDbPath   = "paths.db"
+	dbPath       = "paths.db"
 )
 
 type Values struct {
 	DiscordToken string
-	JsonDbPath   string
+	DbPath       string
 	SoundsPath   string
 }
 
@@ -25,6 +25,6 @@ func LoadConfigs() Values {
 	return Values{
 		DiscordToken: conf.ValueString(discordToken),
 		SoundsPath:   conf.ValueString(soundsPath),
-		JsonDbPath:   conf.ValueString(jsonDbPath),
+		DbPath:       conf.ValueString(dbPath),
 	}
 }

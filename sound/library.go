@@ -10,7 +10,7 @@ import (
 
 type Library struct {
 	RootPath   string
-	SoundMap   map[string]File
+	SoundMap   map[string]*File
 	Categories []Category
 	Trie       *structs.LowercaseTrie
 }
@@ -45,18 +45,22 @@ func (l *Library) GetSoundNames() []string {
 	return keys
 }
 
+func (l *Library) Contains(s string) bool {
+	return l.Trie.Contains(s)
+}
+
 func (l *Library) GetClosestMatchingSoundID(s string) string {
 	return l.Trie.GetWordWithPrefix(s)
 }
 
 func LoadSounds(rootPath string) error {
-	l := Library{RootPath: rootPath, SoundMap: make(map[string]File)}
+	l := Library{RootPath: rootPath, SoundMap: make(map[string]*File)}
 	files, err := walkRootDirectoryForSounds(rootPath, "")
 	if err != nil {
 		return err
 	}
 	for i := range files {
-		l.SoundMap[files[i].ID] = files[i]
+		l.SoundMap[files[i].ID] = &files[i]
 	}
 	errs := l.doConversions()
 	if len(errs) > 0 {
@@ -74,10 +78,6 @@ func LoadSounds(rootPath string) error {
 
 func GetLibrary() *Library {
 	return &library
-}
-
-func GetSounds() *map[string]File {
-	return &library.SoundMap
 }
 
 func walkRootDirectoryForSounds(start, root string) (files []File, err error) {
