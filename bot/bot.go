@@ -24,6 +24,7 @@ func NewBot(token string) (b *Bot, err error) {
 		return
 	}
 	b = &Bot{Start: time.Now(), Session: discord}
+	b.VoiceConnections = make(map[string]*discordgo.VoiceConnection)
 	b.initMessageCommands()
 	b.initSlashCommands()
 	b.routeHandlers()

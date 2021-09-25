@@ -38,7 +38,7 @@ func OnGuildVoiceJoinHandler(b *Bot) func(*discordgo.Session, *discordgo.VoiceSt
 		if err != nil {
 			return
 		}
-		if vs.BeforeUpdate.ChannelID != vs.ChannelID {
+		if vs.BeforeUpdate == nil || vs.BeforeUpdate.ChannelID != vs.ChannelID {
 			if err = openConnection(b, vs.ChannelID, vs.GuildID); err != nil {
 				return
 			}
@@ -67,6 +67,7 @@ func OnPlayMessageCommandReceivedHandler(b *Bot) func(*discordgo.Session, *disco
 	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if strings.HasPrefix(m.Content, "?") && len(m.Content) > 1 {
 			if err := openConnection(b, m.ChannelID, m.GuildID); err != nil {
+				log.Fatal(err)
 				return
 			}
 			PlaySoundMessageCommand(s, b.VoiceConnections[m.GuildID], m)

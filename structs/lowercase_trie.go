@@ -2,13 +2,16 @@ package structs
 
 type LowercaseTrie struct {
 	isWord      bool
-	children    []LowercaseTrie
+	children    []*LowercaseTrie
 	numChildren int
 }
 
 func NewLowercaseTrie(set []string) *LowercaseTrie {
 	var trie LowercaseTrie
-	trie.children = make([]LowercaseTrie, len(lowercaseAlphabet))
+	trie.children = make([]*LowercaseTrie, len(lowercaseAlphabet))
+	for _, s := range set {
+		trie.Add(s)
+	}
 	return &trie
 }
 
@@ -18,10 +21,10 @@ func (t *LowercaseTrie) Add(s string) bool {
 	if index < 0 {
 		return false
 	}
-	var child = &t.children[index]
+	var child = t.children[index]
 	if child == nil {
-		child = &LowercaseTrie{}
-		t.children[index] = *child
+		t.children[index] = NewLowercaseTrie([]string{})
+		child = t.children[index]
 		t.numChildren++
 	}
 	if len(s) == 1 {
@@ -40,12 +43,15 @@ func (t *LowercaseTrie) Add(s string) bool {
 func (t *LowercaseTrie) GetNode(s string) *LowercaseTrie {
 	var node = t
 	for i := 0; i < len(s); i++ {
-		index := sliceIndex(rune(s[0]), lowercaseAlphabet)
+		index := sliceIndex(rune(s[i]), lowercaseAlphabet)
 		if index == -1 {
 			return nil // bad character
 		}
 		var child = node.children[index]
-		node = &child
+		if child == nil {
+			return nil
+		}
+		node = child
 	}
 	return node
 }
@@ -67,11 +73,11 @@ func (t *LowercaseTrie) GetWordWithPrefix(s string) string {
 		for i := 0; i < len(lowercaseAlphabet); i++ {
 			c := lowercaseAlphabet[i]
 			child := n.children[i]
-			if child.isWord {
+			if child != nil && child.isWord {
 				return out + string(c)
 			}
-			if largest == nil || largest.numChildren < child.numChildren {
-				largest = &child
+			if child != nil && (largest == nil || largest.numChildren < child.numChildren) {
+				largest = child
 				l = c
 			}
 		}

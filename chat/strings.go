@@ -16,14 +16,22 @@ var (
 )
 
 type MessageBuilder struct {
-	msgStrings []string
-	*strings.Builder
+	initialized bool
+	msgStrings  []string
+	strings.Builder
+}
+
+func NewMessageBuilder() *MessageBuilder {
+	return &MessageBuilder{}
 }
 
 func (b *MessageBuilder) Write(s string) error {
-	if b.Len()+len(s) > maxMessageLength {
+	if b.initialized && b.Len()+len(s) > maxMessageLength {
 		b.msgStrings = append(b.msgStrings, b.String())
-		b.Builder.Reset()
+		b.Builder = strings.Builder{}
+		b.initialized = false
+	} else {
+		b.initialized = true
 	}
 	_, err := b.WriteString(s)
 	if err != nil {

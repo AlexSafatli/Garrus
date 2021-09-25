@@ -88,8 +88,8 @@ func SearchSoundsMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate
 		query = m.Content[i+1:]
 	}
 	possibilities = searchSounds(query)
-	mb := chat.MessageBuilder{}
-	_ = mb.Write(fmt.Sprintf("Found **%d** possible sounds f or query `%s`%s%s.\n\n", len(possibilities), query, chat.Separator, m.Author.Mention()))
+	mb := chat.NewMessageBuilder()
+	_ = mb.Write(fmt.Sprintf("Found **%d** possible sounds for query `%s`%s%s.\n\n", len(possibilities), query, chat.Separator, m.Author.Mention()))
 	if len(possibilities) > 0 {
 		for _, k := range possibilities {
 			_ = mb.Write("`?" + k + "` ")
@@ -119,7 +119,7 @@ func SearchSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCrea
 	}
 	possibilities = searchSounds(query)
 	mb := chat.MessageBuilder{}
-	_ = mb.Write(fmt.Sprintf("Found **%d** possible sounds f or query `%s`%s%s.\n\n", len(possibilities), query, chat.Separator, i.User.Mention()))
+	_ = mb.Write(fmt.Sprintf("Found **%d** possible sounds for query `%s`%s%s.\n\n", len(possibilities), query, chat.Separator, i.User.Mention()))
 	if len(possibilities) > 0 {
 		for _, k := range possibilities {
 			_ = mb.Write("`?" + k + "` ")
