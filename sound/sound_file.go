@@ -76,3 +76,12 @@ func (l *Library) LoadSoundData(db *bolt.DB) error {
 	}
 	return err
 }
+
+func (f *File) ContainsCategory(cat string) bool {
+	for _, c := range f.Categories {
+		if c == cat {
+			return true
+		}
+	}
+	return false
+}

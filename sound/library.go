@@ -2,6 +2,7 @@ package sound
 
 import (
 	"github.com/AlexSafatli/Garrus/structs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,11 +23,12 @@ func (l *Library) doConversions() []error {
 	for _, v := range l.SoundMap {
 		if needsConversionToDCA(v.FilePath) {
 			var newPath = strings.TrimSuffix(v.FilePath, filepath.Ext(v.FilePath)) + ".dca"
+			log.Printf("Converting sound %s to DCA -> %s", v.ID, newPath)
 			err := saveSoundFileToDCA(v.FilePath, newPath)
 			if err != nil {
 				errs = append(errs, err)
 			} else {
-				err = os.Remove(v.FilePath)
+				err = os.Remove(v.FilePath) // remove the old path
 				if err != nil {
 					errs = append(errs, err)
 				}
@@ -84,9 +86,9 @@ func walkRootDirectoryForSounds(start, root string) (files []File, err error) {
 	if len(root) == 0 {
 		root = start
 	}
-	var cleanRoot = filepath.Clean(start)
-	err = filepath.Walk(cleanRoot, func(path string, info os.FileInfo, err error) error {
-		if err != nil || path == cleanRoot || strings.HasPrefix(info.Name(), ".") {
+	var cleanStart = filepath.Clean(start)
+	err = filepath.Walk(cleanStart, func(path string, info os.FileInfo, err error) error {
+		if err != nil || cleanStart == path || strings.HasPrefix(info.Name(), ".") {
 			return nil // ignore hidden files, etc.
 		}
 		if !info.IsDir() && isSoundFile(info.Name()) {
@@ -99,7 +101,7 @@ func walkRootDirectoryForSounds(start, root string) (files []File, err error) {
 				FilePath:   path,
 				Categories: cats,
 			})
-		} else if info.IsDir() && cleanRoot != filepath.Dir(path) {
+		} else if info.IsDir() && cleanStart != filepath.Dir(path) {
 			var subfiles, err = walkRootDirectoryForSounds(path, root)
 			if err != nil {
 				return err
@@ -108,7 +110,7 @@ func walkRootDirectoryForSounds(start, root string) (files []File, err error) {
 				subfiles[i].Categories = append(subfiles[i].Categories, filepath.Base(filepath.Dir(path)))
 			}
 			files = append(files, subfiles...)
-		} else if cleanRoot == filepath.Dir(path) {
+		} else if cleanStart == filepath.Dir(path) {
 			return nil
 		}
 		return filepath.SkipDir

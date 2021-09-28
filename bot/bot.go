@@ -46,6 +46,10 @@ func (b *Bot) initMessageCommands() {
 			Function: SearchSoundsMessageCommand,
 		},
 		{
+			Command:  ".list",
+			Function: ListSoundsMessageCommand,
+		},
+		{
 			Command:  "?",
 			Function: PlaySoundMessageCommand,
 		},
@@ -64,13 +68,13 @@ func (b *Bot) initSlashCommands() {
 		{
 			Command: &discordgo.ApplicationCommand{
 				Name:        "entrance",
-				Description: "Set your entrance sound when joining a voice channel (or clear it if nothing is specified)",
+				Description: "Set your entrance sound when joining a voice channel (or clear it if nothing is given)",
 				Options: []*discordgo.ApplicationCommandOption{
 					{
 						Type:        discordgo.ApplicationCommandOptionString,
 						Name:        "sound",
 						Description: "The name of the sound",
-						Required:    false,
+						Required:    true,
 					},
 					{
 						Type:        discordgo.ApplicationCommandOptionString,
@@ -96,6 +100,21 @@ func (b *Bot) initSlashCommands() {
 				},
 			},
 			Function: SearchSoundsSlashCommand,
+		},
+		{
+			Command: &discordgo.ApplicationCommand{
+				Name:        "list",
+				Description: "Lists all sound files (all sounds or those for an optional category)",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionString,
+						Name:        "category",
+						Description: "A category by name (case-insensitive)",
+						Required:    false,
+					},
+				},
+			},
+			Function: ListSoundsSlashCommand,
 		},
 		{
 			Command: &discordgo.ApplicationCommand{

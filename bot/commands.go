@@ -15,20 +15,8 @@ const (
 	entranceTitle     = "Set Entrance"
 	playSoundTitle    = "Play Sound"
 	searchSoundsTitle = "Search Sounds"
+	listSoundsTitle   = "List Sounds"
 )
-
-func searchSounds(query string) (possibilities []string) {
-	closest := sound.GetLibrary().GetClosestMatchingSoundID(query)
-	if len(closest) > 0 {
-		possibilities = append(possibilities, closest)
-	}
-	for _, name := range sound.GetLibrary().GetSoundNames() {
-		if strings.Contains(name, query) && name != closest {
-			possibilities = append(possibilities, closest)
-		}
-	}
-	return
-}
 
 // AboutMessageCommand takes a created message and returns an About embed message
 func AboutMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -74,19 +62,19 @@ func SetEntranceSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreat
 		log.Fatalln("Could not load database", err)
 	}
 	defer db.Close()
-	if len(i.ApplicationCommandData().Options) == 0 {
-		err := sound.DeleteEntranceForUser(i.Member.User.ID, db)
-		chat.SendInteractionResponseForAction(s, i, "Cleared your entrance.", err)
-		return
-	}
 	args := i.ApplicationCommandData().Options
 	if len(args) >= 1 {
 		soundID = args[0].StringValue()
 	} else if len(args) >= 2 {
 		pmsg = args[1].StringValue()
 	}
-	err = sound.SetEntranceForUser(i.Member.User.ID, soundID, pmsg, db)
-	chat.SendInteractionResponseForAction(s, i, fmt.Sprintf("Set your entrance to `%s`.", soundID), err)
+	if strings.TrimSpace(soundID) == "" {
+		err := sound.DeleteEntranceForUser(i.Member.User.ID, db)
+		chat.SendInteractionResponseForAction(s, i, "Cleared your entrance.", err)
+	} else {
+		err = sound.SetEntranceForUser(i.Member.User.ID, soundID, pmsg, db)
+		chat.SendInteractionResponseForAction(s, i, fmt.Sprintf("Set your entrance to `%s`.", soundID), err)
+	}
 }
 
 // SearchSoundsMessageCommand returns the collection of sounds matching a query
@@ -139,6 +127,60 @@ func SearchSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCrea
 		}
 	} else {
 		chat.SendWarningEmbedInteractionResponse(s, i, searchSoundsTitle, "Could not find any sounds for query `"+query+"`.")
+	}
+}
+
+// ListSoundsMessageCommand returns a collection of sounds over multiple messages
+func ListSoundsMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
+	var query string
+	i := strings.Index(m.Content, " ")
+	if i > 0 {
+		query = m.Content[i+1:]
+	}
+	if query == "" { // all sounds
+		for _, c := range sound.GetLibrary().Categories {
+			sendSoundsForCategoryForMessageCommand(s, m.ChannelID, &c)
+		}
+		return
+	}
+	var catFound bool
+	for _, c := range sound.GetLibrary().Categories {
+		if strings.ToLower(query) == strings.ToLower(c.Name) {
+			sendSoundsForCategoryForMessageCommand(s, m.ChannelID, &c)
+			catFound = true
+		}
+	}
+	if !catFound {
+		chat.SendWarningEmbedMessage(s, m.ChannelID, listSoundsTitle, "Could not find any category with name "+query)
+	}
+}
+
+// ListSoundsSlashCommand returns a collection of sounds over multiple messages
+func ListSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	var query string
+	if err := chat.SendInteractionAckForAction(s, i, nil); err != nil {
+		return
+	}
+	defer chat.DeleteInteractionResponse(s, i)
+	args := i.ApplicationCommandData().Options
+	if len(args) == 1 {
+		query = args[0].StringValue()
+	}
+	if query == "" { // all sounds
+		for _, c := range sound.GetLibrary().Categories {
+			sendSoundsForCategoryForSlashCommand(s, i, &c)
+		}
+		return
+	}
+	var catFound bool
+	for _, c := range sound.GetLibrary().Categories {
+		if strings.ToLower(query) == strings.ToLower(c.Name) {
+			sendSoundsForCategoryForSlashCommand(s, i, &c)
+			catFound = true
+		}
+	}
+	if !catFound {
+		chat.SendWarningEmbedInteractionResponse(s, i, listSoundsTitle, "Could not find any category with name "+query)
 	}
 }
 
