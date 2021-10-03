@@ -48,7 +48,8 @@ func (l *Library) GetSoundNames() []string {
 }
 
 func (l *Library) Contains(s string) bool {
-	return l.Trie.Contains(s)
+	_, ok := l.SoundMap[s]
+	return ok
 }
 
 func (l *Library) GetClosestMatchingSoundID(s string) string {

@@ -209,7 +209,12 @@ func PlaySoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 			log.Fatalln("When updating sound => " + err.Error())
 		}
 	} else {
-		chat.SendWarningEmbedMessage(s, m.ChannelID, playSoundTitle, "Could not find a sound by name `"+query+"`. Did you mean `"+library.GetClosestMatchingSoundID(query)+"`?")
+		msg := "Could not find a sound by name `" + query + "`."
+		closestMatch := library.GetClosestMatchingSoundID(query)
+		if len(closestMatch) > 0 {
+			msg += " Did you mean `" + closestMatch + "`?"
+		}
+		chat.SendWarningEmbedMessage(s, m.ChannelID, playSoundTitle, msg)
 	}
 }
 
@@ -250,6 +255,11 @@ func PlaySoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate)
 		}
 		chat.SendEmbedInteractionResponse(s, i, playSoundTitle, "Played sound `"+query+"`.", map[string]string{})
 	} else {
-		chat.SendWarningEmbedInteractionResponse(s, i, playSoundTitle, "Could not find a sound by name `"+query+"`. Did you mean `"+library.GetClosestMatchingSoundID(query)+"`?")
+		msg := "Could not find a sound by name `" + query + "`."
+		closestMatch := library.GetClosestMatchingSoundID(query)
+		if len(closestMatch) > 0 {
+			msg += " Did you mean `" + closestMatch + "`?"
+		}
+		chat.SendWarningEmbedInteractionResponse(s, i, playSoundTitle, msg)
 	}
 }
