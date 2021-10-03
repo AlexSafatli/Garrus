@@ -82,38 +82,29 @@ func GetLibrary() *Library {
 	return &library
 }
 
-func walkRootDirectoryForSounds(start, root string) (files []File, err error) {
-	if len(root) == 0 {
-		root = start
-	}
+func walkRootDirectoryForSounds(start, top string) (files []File, err error) {
 	var cleanStart = filepath.Clean(start)
+	if len(top) == 0 {
+		top = cleanStart
+	}
 	err = filepath.Walk(cleanStart, func(path string, info os.FileInfo, err error) error {
 		if err != nil || cleanStart == path || strings.HasPrefix(info.Name(), ".") {
 			return nil // ignore hidden files, etc.
 		}
 		if !info.IsDir() && isSoundFile(info.Name()) {
+			parent := filepath.Dir(path)
 			var cats []string
-			if filepath.Dir(path) != root {
-				cats = []string{filepath.Base(filepath.Dir(path))}
+			for filepath.Base(parent) != filepath.Base(top) {
+				cats = append(cats, filepath.Base(parent))
+				parent = filepath.Dir(parent)
 			}
 			files = append(files, File{
 				ID:         strings.TrimSuffix(info.Name(), filepath.Ext(info.Name())),
 				FilePath:   path,
 				Categories: cats,
 			})
-		} else if info.IsDir() && cleanStart != filepath.Dir(path) {
-			var subfiles, err = walkRootDirectoryForSounds(path, root)
-			if err != nil {
-				return err
-			}
-			for i := range subfiles {
-				subfiles[i].Categories = append(subfiles[i].Categories, filepath.Base(filepath.Dir(path)))
-			}
-			files = append(files, subfiles...)
-		} else if cleanStart == filepath.Dir(path) {
-			return nil
 		}
-		return filepath.SkipDir
+		return nil
 	})
 	return
 }
