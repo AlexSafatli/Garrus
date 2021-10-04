@@ -139,14 +139,14 @@ func ListSoundsMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) 
 	}
 	if query == "" { // all sounds
 		for _, c := range sound.GetLibrary().Categories {
-			sendSoundsForCategoryForMessageCommand(s, m.ChannelID, &c)
+			sendSoundsForCategoryForMessageCommand(s, m.ChannelID, c)
 		}
 		return
 	}
 	var catFound bool
 	for _, c := range sound.GetLibrary().Categories {
-		if strings.ToLower(query) == strings.ToLower(c.Name) {
-			sendSoundsForCategoryForMessageCommand(s, m.ChannelID, &c)
+		if strings.ToLower(query) == strings.ToLower(c) {
+			sendSoundsForCategoryForMessageCommand(s, m.ChannelID, c)
 			catFound = true
 		}
 	}
@@ -168,14 +168,14 @@ func ListSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate
 	}
 	if query == "" { // all sounds
 		for _, c := range sound.GetLibrary().Categories {
-			sendSoundsForCategoryForSlashCommand(s, i, &c)
+			sendSoundsForCategoryForSlashCommand(s, i, c)
 		}
 		return
 	}
 	var catFound bool
 	for _, c := range sound.GetLibrary().Categories {
-		if strings.ToLower(query) == strings.ToLower(c.Name) {
-			sendSoundsForCategoryForSlashCommand(s, i, &c)
+		if strings.ToLower(query) == strings.ToLower(c) {
+			sendSoundsForCategoryForSlashCommand(s, i, c)
 			catFound = true
 		}
 	}

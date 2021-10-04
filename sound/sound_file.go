@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/boltdb/bolt"
+	"log"
 )
 
 type File struct {
@@ -14,13 +15,8 @@ type File struct {
 	ExcludedFromRandom bool
 }
 
-type Category struct {
-	Name     string
-	Children []Category
-}
-
 func (l *Library) SetSoundData(sound *File, db *bolt.DB) error {
-	err := db.Update(func(tx *bolt.Tx) error {
+	if err := db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("sound"))
 		if b == nil {
 			return fmt.Errorf("get bucket: %+v", b)
@@ -30,14 +26,19 @@ func (l *Library) SetSoundData(sound *File, db *bolt.DB) error {
 			return err
 		}
 		return b.Put([]byte(sound.ID), buf)
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
-	existing := l.SoundMap[sound.ID]
-	existing.NumberPlays = sound.NumberPlays
-	existing.ExcludedFromRandom = sound.ExcludedFromRandom
-	l.SoundMap[sound.ID] = existing
+	existing, ok := l.SoundMap[sound.ID]
+	if !ok || existing.ID != sound.ID {
+		return fmt.Errorf("get sound failed for ID %s", sound.ID)
+	}
+	if sound.NumberPlays != existing.NumberPlays {
+		existing.NumberPlays = sound.NumberPlays
+	}
+	if sound.ExcludedFromRandom != existing.ExcludedFromRandom {
+		existing.ExcludedFromRandom = sound.ExcludedFromRandom
+	}
 	return nil
 }
 
@@ -64,6 +65,7 @@ func (l *Library) LoadSoundData(db *bolt.DB) error {
 			continue
 		} else {
 			if sf.FilePath != existing.FilePath {
+				log.Printf("Found new path for %s: %s -> %s", existing.ID, sf.FilePath, existing.FilePath)
 				sf.FilePath = existing.FilePath
 				if err := l.SetSoundData(&sf, db); err != nil {
 					return err
@@ -71,7 +73,6 @@ func (l *Library) LoadSoundData(db *bolt.DB) error {
 			}
 			existing.NumberPlays = sf.NumberPlays
 			existing.ExcludedFromRandom = sf.ExcludedFromRandom
-			l.SoundMap[sf.ID] = &sf
 		}
 	}
 	return err

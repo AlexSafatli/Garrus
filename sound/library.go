@@ -12,7 +12,7 @@ import (
 type Library struct {
 	RootPath   string
 	SoundMap   map[string]*File
-	Categories []Category
+	Categories []string
 	Trie       *structs.LowercaseTrie
 }
 
@@ -58,7 +58,7 @@ func (l *Library) GetClosestMatchingSoundID(s string) string {
 
 func LoadSounds(rootPath string) error {
 	l := Library{RootPath: rootPath, SoundMap: make(map[string]*File)}
-	files, err := walkRootDirectoryForSounds(rootPath, "")
+	files, cats, err := walkRootDirectoryForSounds(rootPath, "")
 	if err != nil {
 		return err
 	}
@@ -68,10 +68,6 @@ func LoadSounds(rootPath string) error {
 	errs := l.doConversions()
 	if len(errs) > 0 {
 		return errs[0]
-	}
-	cats, err := walkRootDirectoryForCategories(rootPath, "")
-	if err != nil {
-		return err
 	}
 	l.Categories = cats
 	l.Trie = structs.NewLowercaseTrie(l.GetSoundNames())
@@ -83,8 +79,9 @@ func GetLibrary() *Library {
 	return &library
 }
 
-func walkRootDirectoryForSounds(start, top string) (files []File, err error) {
+func walkRootDirectoryForSounds(start, top string) (files []File, categories []string, err error) {
 	var cleanStart = filepath.Clean(start)
+	var catMap = make(map[string]bool)
 	if len(top) == 0 {
 		top = cleanStart
 	}
@@ -96,7 +93,12 @@ func walkRootDirectoryForSounds(start, top string) (files []File, err error) {
 			parent := filepath.Dir(path)
 			var cats []string
 			for filepath.Base(parent) != filepath.Base(top) {
-				cats = append(cats, filepath.Base(parent))
+				c := filepath.Base(parent)
+				if _, ok := catMap[c]; !ok {
+					categories = append(categories, c)
+					catMap[c] = true
+				}
+				cats = append(cats, c)
 				parent = filepath.Dir(parent)
 			}
 			files = append(files, File{
@@ -133,27 +135,4 @@ func needsConversionToDCA(path string) bool {
 		ext = ext[1:] // trim the dot
 	}
 	return ext != "dca"
-}
-
-func walkRootDirectoryForCategories(start, root string) (cats []Category, err error) {
-	if len(root) == 0 {
-		root = start
-	}
-	var cleanRoot = filepath.Clean(start)
-	err = filepath.Walk(cleanRoot, func(path string, info os.FileInfo, err error) error {
-		if err != nil || path == cleanRoot || strings.HasPrefix(info.Name(), ".") {
-			return nil // ignore hidden files, etc.
-		}
-		if info.IsDir() {
-			var cat = Category{Name: info.Name()}
-			children, err := walkRootDirectoryForCategories(path, root)
-			if err != nil {
-				return err
-			}
-			cat.Children = append(cat.Children, children...)
-			cats = append(cats, cat)
-		}
-		return filepath.SkipDir
-	})
-	return
 }
