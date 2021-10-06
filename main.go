@@ -64,9 +64,6 @@ func main() {
 	}
 	log.Println("Loaded bot with provided token")
 
-	// Set status
-	discord.Session.UpdateGameStatus(0, "Old World")
-
 	// Register slash commands
 	if err = discord.RegisterSlashCommands(); err != nil {
 		log.Fatalln("Could not register slash commands", err)

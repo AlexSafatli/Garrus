@@ -23,8 +23,8 @@ func NewMessageCommandRouteHandler(s *discordgo.Session, cmds []*MessageCommand)
 	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		for _, c := range cmds {
 			if strings.HasPrefix(m.Content, c.Command) {
-				c.Function(s, m)
 				DeleteReceivedMessage(s, m)
+				c.Function(s, m)
 				return
 			}
 		}
