@@ -6,6 +6,7 @@
 # Folders
 _obj
 _test
+.git/
 .vscode/
 .idea/
 
@@ -18,15 +19,11 @@ cgo1.go
 _cgo_defun.c
 _cgo_gotypes.go
 _cgo_export.*
-
 _testmain.go
 
-*.toml
 *.exe
 *.test
 *.prof
-
-go.sum
 
 # Bolt
 bolt.db

@@ -76,40 +76,51 @@ func getMainChannelIDForGuild(s *discordgo.Session, guildID string) string {
 // OnGuildVoiceJoinHandler is a very specific use-case handler function that controls follow and entrance behavior
 func OnGuildVoiceJoinHandler(b *Bot) func(*discordgo.Session, *discordgo.VoiceStateUpdate) {
 	return func(s *discordgo.Session, vs *discordgo.VoiceStateUpdate) {
+		var err error
 		if vs.UserID == s.State.User.ID { // move done by bot
 			return
 		}
-		u, err := b.Session.User(vs.UserID)
-		if err != nil {
-			return
-		}
-		if len(vs.ChannelID) == 0 {
+		if len(vs.ChannelID) == 0 { // empty target voice channel
 			defer closeConnectionOrChangeChannelsIfAlone(s, vs.GuildID)
 		}
-		if len(vs.ChannelID) > 0 && (vs.BeforeUpdate == nil || vs.BeforeUpdate.ChannelID != vs.ChannelID) {
+		if len(vs.ChannelID) > 0 && (vs.BeforeUpdate == nil || vs.BeforeUpdate.ChannelID != vs.ChannelID) { // play an entrance
 			if err = openConnection(s, vs.ChannelID, vs.GuildID); err != nil {
 				return
 			}
 			entrance := sound.GetEntranceForUser(vs.UserID)
+
+			// If the user has an entrance, play it
 			if entrance != nil {
+
+				// Get the file to play
+				var file = sound.GetLibrary().SoundMap[entrance.SoundID]
+
+				// Play it
+				err = sound.PlayDCA(file.FilePath, b.VoiceConnections[vs.GuildID])
+				if err != nil {
+					return
+				}
+
+				// Send a welcome message, delete old bot messages
+				var soundInfo string
+				channelID := getMainChannelIDForGuild(s, vs.GuildID)
+				soundInfo = fmt.Sprintf("Played `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
+				u, err := b.Session.User(vs.UserID)
+				if err != nil {
+					return
+				}
+				m := chat.SendWelcomeEmbedMessage(b.Session, channelID, u, soundInfo)
+				if lastMessageID, ok := b.lastSentEntranceMessage[vs.GuildID]; ok {
+					chat.DeleteBotMessages(s, channelID, lastMessageID)
+				}
+				b.lastSentEntranceMessage[vs.GuildID] = m.ID // keep track of the last sent entrance message
+
+				// Load database and save changes to database
 				db, err := LoadDatabase()
 				if err != nil {
 					log.Fatalln("Could not load database", err)
 				}
 				defer db.Close()
-				var file = sound.GetLibrary().SoundMap[entrance.SoundID]
-				var soundInfo string
-				channelID := getMainChannelIDForGuild(s, vs.GuildID)
-				soundInfo = fmt.Sprintf("Played `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
-				if lastMessageID, ok := b.lastSentEntranceMessage[vs.GuildID]; ok {
-					chat.DeleteBotMessages(s, channelID, lastMessageID)
-				}
-				m := chat.SendWelcomeEmbedMessage(b.Session, channelID, u, soundInfo)
-				b.lastSentEntranceMessage[vs.GuildID] = m.ID // keep track of the last sent entrance message
-				err = sound.PlayDCA(file.FilePath, b.VoiceConnections[vs.GuildID])
-				if err != nil {
-					return
-				}
 				file.NumberPlays++
 				if err = sound.GetLibrary().SetSoundData(file, db); err != nil {
 					log.Fatalln("When updating sound => " + err.Error())
