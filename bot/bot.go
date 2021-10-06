@@ -14,6 +14,7 @@ type Bot struct {
 	MessageCommands         []*chat.MessageCommand
 	SlashCommands           []*chat.SlashCommand
 	lastSentEntranceMessage map[string]string
+	mainGuildChannelIDs     map[string]string
 	*discordgo.Session
 }
 
@@ -25,6 +26,7 @@ func NewBot(token string) (b *Bot, err error) {
 	}
 	b = &Bot{Start: time.Now(), Session: discord}
 	b.lastSentEntranceMessage = make(map[string]string)
+	b.mainGuildChannelIDs = make(map[string]string)
 	b.initMessageCommands()
 	b.initSlashCommands()
 	b.routeHandlers()
@@ -138,6 +140,7 @@ func (b *Bot) routeHandlers() {
 	b.AddHandler(chat.NewMessageCommandRouteHandler(b.Session, b.MessageCommands))
 	b.AddHandler(chat.NewSlashCommandRouteHandler(b.Session, b.SlashCommands))
 	b.AddHandler(OnGuildVoiceJoinHandler(b))
+	b.AddHandler(OnGuildChannelCreateHandler(b))
 }
 
 func (b *Bot) RegisterSlashCommands() error {

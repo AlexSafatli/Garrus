@@ -8,56 +8,13 @@ import (
 	"log"
 )
 
-func openConnection(s *discordgo.Session, channelID, guildID string) error {
-	existing, ok := s.VoiceConnections[guildID]
-	if ok && existing.ChannelID != channelID || !ok {
-		_, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func closeConnectionOrChangeChannelsIfAlone(s *discordgo.Session, guildID string) {
-	if s.VoiceConnections[guildID] == nil {
-		return
-	}
-	g, err := s.State.Guild(guildID)
-	if err != nil {
-		return
-	}
-	var totalUsersFound int
-	var usersFound map[string]int
-	usersFound = make(map[string]int)
-	for _, vs := range g.VoiceStates {
-		if vs.UserID != s.State.User.ID {
-			usersFound[vs.ChannelID]++
-			totalUsersFound++
-		}
-	}
-	if totalUsersFound == 0 {
-		if err = s.VoiceConnections[guildID].Disconnect(); err != nil {
-			s.VoiceConnections[guildID].Close()
-		}
-	} else {
-		var mostUsers int
-		var channelIDWithMostUsers string
-		for k, v := range usersFound {
-			if v > mostUsers {
-				channelIDWithMostUsers = k
-			}
-		}
-		if channelIDWithMostUsers != s.VoiceConnections[guildID].ChannelID {
-			_ = s.VoiceConnections[guildID].ChangeChannel(channelIDWithMostUsers, false, true)
-		}
-	}
-}
-
-func getMainChannelIDForGuild(s *discordgo.Session, guildID string) string {
+func getMainChannelIDForGuild(b *Bot, guildID string) string {
 	var id string
+	if id, ok := b.mainGuildChannelIDs[guildID]; ok {
+		return id
+	}
 	var lowestPos = -1
-	gc, err := s.GuildChannels(guildID)
+	gc, err := b.Session.GuildChannels(guildID)
 	if err != nil {
 		return id
 	}
@@ -69,6 +26,9 @@ func getMainChannelIDForGuild(s *discordgo.Session, guildID string) string {
 			lowestPos = c.Position
 			id = c.ID
 		}
+	}
+	if len(id) > 0 {
+		b.mainGuildChannelIDs[guildID] = id // cache the channel ID
 	}
 	return id
 }
@@ -105,7 +65,7 @@ func OnGuildVoiceJoinHandler(b *Bot) func(*discordgo.Session, *discordgo.VoiceSt
 
 				// Send a welcome message, delete old bot messages
 				var soundInfo string
-				channelID := getMainChannelIDForGuild(s, vs.GuildID)
+				channelID := getMainChannelIDForGuild(b, vs.GuildID)
 				soundInfo = fmt.Sprintf("Played `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
 				u, err := b.Session.User(vs.UserID)
 				if err != nil {
@@ -126,6 +86,25 @@ func OnGuildVoiceJoinHandler(b *Bot) func(*discordgo.Session, *discordgo.VoiceSt
 				file.NumberPlays++
 				if err = sound.GetLibrary().SetSoundData(file, db); err != nil {
 					log.Fatalln("When updating sound => " + err.Error())
+				}
+			}
+		}
+	}
+}
+
+// OnGuildChannelCreateHandler is another specific use-case handler function that invalidates the bot's channel ID cache if the channel in the cache is deleted
+func OnGuildChannelCreateHandler(b *Bot) func(*discordgo.Session, *discordgo.ChannelCreate) {
+	return func(s *discordgo.Session, cc *discordgo.ChannelCreate) {
+		if len(cc.GuildID) == 0 || cc.Channel == nil {
+			return // check if the guild and channels are defined first
+		}
+		if id, ok := b.mainGuildChannelIDs[cc.GuildID]; ok {
+			if id == cc.Channel.ID {
+				delete(b.mainGuildChannelIDs, cc.GuildID) // invalidate cache
+			} else {
+				newMainChannel := getMainChannelIDForGuild(b, cc.GuildID)
+				if newMainChannel != id {
+					b.mainGuildChannelIDs[cc.GuildID] = newMainChannel // update
 				}
 			}
 		}
