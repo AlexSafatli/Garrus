@@ -95,11 +95,13 @@ func OnGuildVoiceJoinHandler(b *Bot) func(*discordgo.Session, *discordgo.VoiceSt
 				// Get the file to play
 				var file = sound.GetLibrary().SoundMap[entrance.SoundID]
 
-				// Play it
-				err = sound.PlayDCA(file.FilePath, b.VoiceConnections[vs.GuildID])
-				if err != nil {
-					return
-				}
+				// Play it in a goroutine
+				go func() {
+					err := sound.PlayDCA(file.FilePath, b.VoiceConnections[vs.GuildID])
+					if err != nil {
+						log.Printf("Error while playing entrance for %s -> %v", vs.UserID, err)
+					}
+				}()
 
 				// Send a welcome message, delete old bot messages
 				var soundInfo string
@@ -109,10 +111,10 @@ func OnGuildVoiceJoinHandler(b *Bot) func(*discordgo.Session, *discordgo.VoiceSt
 				if err != nil {
 					return
 				}
-				m := chat.SendWelcomeEmbedMessage(b.Session, channelID, u, soundInfo)
 				if lastMessageID, ok := b.lastSentEntranceMessage[vs.GuildID]; ok {
 					chat.DeleteBotMessages(s, channelID, lastMessageID)
 				}
+				m := chat.SendWelcomeEmbedMessage(b.Session, channelID, u, soundInfo)
 				b.lastSentEntranceMessage[vs.GuildID] = m.ID // keep track of the last sent entrance message
 
 				// Load database and save changes to database
