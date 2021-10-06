@@ -28,6 +28,16 @@ func AboutSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Printf("About handler running for message from %s", i.Member.User.Username)
 }
 
+// HelpMessageCommand takes a created message and returns an Help embed message
+func HelpMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
+	log.Printf("Help handler running for message from %s", m.Author.Username)
+}
+
+// HelpSlashCommand returns an Help embed message for a slash command
+func HelpSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Printf("Help handler running for message from %s", i.Member.User.Username)
+}
+
 // SetEntranceMessageCommand sets an entrance for a user
 func SetEntranceMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	var soundID, content, pmsg string

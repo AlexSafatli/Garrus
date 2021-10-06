@@ -40,6 +40,10 @@ func (b *Bot) initMessageCommands() {
 			Function: AboutMessageCommand,
 		},
 		{
+			Command:  ".help",
+			Function: HelpMessageCommand,
+		},
+		{
 			Command:  ".entrance",
 			Function: SetEntranceMessageCommand,
 		},
@@ -66,6 +70,13 @@ func (b *Bot) initSlashCommands() {
 				Description: "About this bot",
 			},
 			Function: AboutSlashCommand,
+		},
+		{
+			Command: &discordgo.ApplicationCommand{
+				Name:        "help",
+				Description: "See this bot's commands",
+			},
+			Function: HelpSlashCommand,
 		},
 		{
 			Command: &discordgo.ApplicationCommand{

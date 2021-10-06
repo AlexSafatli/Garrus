@@ -80,7 +80,7 @@ func SendWelcomeEmbedMessage(s *discordgo.Session, channelId string, user *disco
 		desc = user.Mention()
 	}
 	e := makeEmbed(title, desc, map[string]string{
-		RandomString(Whats): "I play sounds and automate things. Type `.help` for more.",
+		RandomString(Whats): "I play sounds and automate things.",
 	})
 	e.Thumbnail = &discordgo.MessageEmbedThumbnail{
 		URL: user.AvatarURL("2048"),
