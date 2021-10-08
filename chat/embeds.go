@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"fmt"
 	"github.com/AlexSafatli/Garrus/sound"
 	"log"
 
@@ -38,6 +39,13 @@ func SendErrorEmbedMessage(s *discordgo.Session, channelId string, title string,
 
 func SendEmbedInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, title string, description string, fields map[string]string) *discordgo.Message {
 	embed := makeEmbed(title, description, fields)
+	m, _ := s.FollowupMessageCreate(s.State.User.ID, i.Interaction, true, &discordgo.WebhookParams{
+		Embeds: []*discordgo.MessageEmbed{embed},
+	})
+	return m
+}
+
+func SendRawEmbedInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed) *discordgo.Message {
 	m, _ := s.FollowupMessageCreate(s.State.User.ID, i.Interaction, true, &discordgo.WebhookParams{
 		Embeds: []*discordgo.MessageEmbed{embed},
 	})
@@ -90,6 +98,34 @@ func SendWelcomeEmbedMessage(s *discordgo.Session, channelId string, user *disco
 		log.Println("When sending embed in channel", channelId, "ran into error =>", err)
 	}
 	return msg
+}
+
+func SendAboutEmbedMessage(s *discordgo.Session, channelId string) *discordgo.Message {
+	var desc = fmt.Sprintf("My name is Garrus Vakarian and this is my rectum. I am a bot created by %s.", Version.Developer)
+	e := makeEmbed(Version.Name, desc, map[string]string{
+		"Usage":             "Most of my commands are located in slash commands (start typing with a `/` to see them). Some older commands are still found with the `.` prefix such as `.entrance`.",
+		RandomString(Whats): "I play sounds and automate things.",
+	})
+	e.Thumbnail = &discordgo.MessageEmbedThumbnail{
+		URL: s.State.User.AvatarURL("2048"),
+	}
+	msg, err := s.ChannelMessageSendEmbed(channelId, e)
+	if err != nil {
+		log.Println("When sending embed in channel", channelId, "ran into error =>", err)
+	}
+	return msg
+}
+
+func GetRawEmbedMessage(s *discordgo.Session) *discordgo.MessageEmbed {
+	var desc = fmt.Sprintf("My name is Garrus Vakarian and this is my rectum. I am a bot created by %s.", Version.Developer)
+	e := makeEmbed("My Name Is "+Version.Name, desc, map[string]string{
+		"Usage":             "Most of my commands are located in slash commands (start typing with a `/` to see them). Some older commands are still found with the `.` prefix such as `.entrance`.",
+		RandomString(Whats): "I play sounds and automate things.",
+	})
+	e.Thumbnail = &discordgo.MessageEmbedThumbnail{
+		URL: s.State.User.AvatarURL("2048"),
+	}
+	return e
 }
 
 func makeEmbed(title string, description string, fields map[string]string) *discordgo.MessageEmbed {

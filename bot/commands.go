@@ -20,12 +20,16 @@ const (
 
 // AboutMessageCommand takes a created message and returns an About embed message
 func AboutMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
-	log.Printf("About handler running for message from %s", m.Author.Username)
+	chat.SendAboutEmbedMessage(s, m.ChannelID)
 }
 
 // AboutSlashCommand returns an About embed message for a slash command
 func AboutSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Printf("About handler running for message from %s", i.Member.User.Username)
+	if err := chat.SendInteractionAckForAction(s, i, nil); err != nil {
+		return
+	}
+	defer chat.DeleteInteractionResponse(s, i)
+	chat.SendRawEmbedInteractionResponse(s, i, chat.GetRawEmbedMessage(s))
 }
 
 // HelpMessageCommand takes a created message and returns an Help embed message
