@@ -218,6 +218,7 @@ func PlaySoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if len(closestMatch) > 0 {
 			msg += " Did you mean `" + closestMatch + "`?"
 		}
+		msg += " " + m.Author.Mention()
 		chat.SendWarningEmbedMessage(s, m.ChannelID, playSoundTitle, msg)
 	}
 }
@@ -264,6 +265,7 @@ func PlaySoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate)
 		if len(closestMatch) > 0 {
 			msg += " Did you mean `" + closestMatch + "`?"
 		}
+		msg += " " + i.User.Mention()
 		chat.SendWarningEmbedInteractionResponse(s, i, playSoundTitle, msg)
 	}
 }
