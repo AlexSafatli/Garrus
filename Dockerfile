@@ -6,8 +6,10 @@ WORKDIR /app
 
 COPY . ./
 
+ARG VERSION
+
 RUN go mod download
 
-RUN go build -o /garrus
+RUN go build -o /garrus -ldflags "-X version.Version=${VERSION}"
 
 CMD [ "/garrus" ]

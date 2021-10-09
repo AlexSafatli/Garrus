@@ -9,7 +9,7 @@ type version struct {
 
 var Version = version{
 	Name:      "Garrus",
-	Version:   "0.1.2",
+	Version:   "0.0.0",
 	GitCommit: "HEAD",
 	Developer: "Asaph",
 }
