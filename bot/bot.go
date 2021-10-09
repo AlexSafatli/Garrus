@@ -52,6 +52,10 @@ func (b *Bot) initMessageCommands() {
 			Function: ListSoundsMessageCommand,
 		},
 		{
+			Command:  ".random",
+			Function: PlayRandomSoundMessageCommand,
+		},
+		{
 			Command:  "?",
 			Function: PlaySoundMessageCommand,
 		},
@@ -117,6 +121,21 @@ func (b *Bot) initSlashCommands() {
 				},
 			},
 			Function: ListSoundsSlashCommand,
+		},
+		{
+			Command: &discordgo.ApplicationCommand{
+				Name:        "random",
+				Description: "Play a random sound file (optionally within a category)",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionString,
+						Name:        "category",
+						Description: "A category",
+						Required:    false,
+					},
+				},
+			},
+			Function: PlayRandomSoundSlashCommand,
 		},
 		{
 			Command: &discordgo.ApplicationCommand{

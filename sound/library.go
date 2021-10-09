@@ -3,6 +3,7 @@ package sound
 import (
 	"github.com/AlexSafatli/Garrus/trie"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -54,6 +55,32 @@ func (l *Library) Contains(s string) bool {
 
 func (l *Library) GetClosestMatchingSoundID(s string) string {
 	return l.Trie.GetWordWithPrefix(s)
+}
+
+func (l *Library) GetRandomSound() *File {
+	var i uint
+	r := uint(rand.Intn(len(l.SoundMap)))
+	for _, v := range l.SoundMap {
+		if i == r {
+			return v
+		}
+		i++
+	}
+	return nil
+}
+
+func (l *Library) GetRandomSoundForCategory(category string) *File {
+	var i uint
+	r := uint(rand.Intn(len(l.SoundMap)))
+	for i <= uint(len(l.SoundMap))+r {
+		for _, v := range l.SoundMap {
+			if i >= r && v.ContainsCategory(category) {
+				return v
+			}
+			i++
+		}
+	}
+	return nil
 }
 
 func LoadSounds(rootPath string) error {

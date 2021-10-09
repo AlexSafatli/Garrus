@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	entranceTitle     = "Set Entrance"
-	playSoundTitle    = "Play Sound"
-	searchSoundsTitle = "Search Sounds"
-	listSoundsTitle   = "List Sounds"
+	entranceTitle        = "Set Entrance"
+	playSoundTitle       = "Play Sound"
+	playRandomSoundTitle = "Play Random Sound"
+	searchSoundsTitle    = "Search Sounds"
+	listSoundsTitle      = "List Sounds"
 )
 
 // AboutMessageCommand takes a created message and returns an About embed message
@@ -267,5 +268,99 @@ func PlaySoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate)
 		}
 		msg += " " + i.User.Mention()
 		chat.SendWarningEmbedInteractionResponse(s, i, playSoundTitle, msg)
+	}
+}
+
+// PlayRandomSoundMessageCommand plays a random sound in a voice channel
+func PlayRandomSoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if s.VoiceConnections[m.GuildID] == nil {
+		// Not in a voice channel
+		chat.SendWarningEmbedMessage(s, m.ChannelID, playSoundTitle, "I am not in a voice channel. Join one first!")
+		return
+	}
+	var query, category string
+	i := strings.Index(m.Content, " ")
+	if i > 0 {
+		query = m.Content[i+1:]
+	}
+	var library = sound.GetLibrary()
+	if len(query) > 0 {
+		for _, c := range library.Categories {
+			if strings.ToLower(query) == strings.ToLower(c) {
+				category = c
+			}
+		}
+	}
+	if len(category) == 0 && len(query) > 0 {
+		chat.SendWarningEmbedMessage(s, m.ChannelID, playRandomSoundTitle, "Could not find any category with name "+query)
+		return
+	}
+	db, err := LoadDatabase()
+	if err != nil {
+		log.Fatalln("Could not load database", err)
+	}
+	defer db.Close()
+	var file *sound.File
+	if len(category) > 0 {
+		file = library.GetRandomSoundForCategory(category)
+	} else {
+		file = library.GetRandomSound()
+	}
+	err = sound.PlayDCA(file.FilePath, s.VoiceConnections[m.GuildID])
+	if err != nil {
+		return
+	}
+	file.NumberPlays++
+	if err = library.SetSoundData(file, db); err != nil {
+		log.Fatalln("When updating sound => " + err.Error())
+	}
+}
+
+// PlayRandomSoundSlashCommand plays a random sound in a voice channel
+func PlayRandomSoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	var query, category string
+	if err := chat.SendInteractionAckForAction(s, i, nil); err != nil {
+		return
+	}
+	defer chat.DeleteInteractionResponse(s, i)
+	if s.VoiceConnections[i.GuildID] == nil {
+		// Not in a voice channel
+		chat.SendWarningEmbedInteractionResponse(s, i, playSoundTitle, "I am not in a voice channel. Join one first!")
+		return
+	}
+	args := i.ApplicationCommandData().Options
+	if len(args) == 1 {
+		query = args[0].StringValue()
+	}
+	var library = sound.GetLibrary()
+	if len(query) > 0 {
+		for _, c := range library.Categories {
+			if strings.ToLower(query) == strings.ToLower(c) {
+				category = c
+			}
+		}
+	}
+	if len(category) == 0 && len(query) > 0 {
+		chat.SendWarningEmbedInteractionResponse(s, i, playRandomSoundTitle, "Could not find any category with name "+query)
+		return
+	}
+	db, err := LoadDatabase()
+	if err != nil {
+		log.Fatalln("Could not load database", err)
+	}
+	defer db.Close()
+	var file *sound.File
+	if len(category) > 0 {
+		file = library.GetRandomSoundForCategory(category)
+	} else {
+		file = library.GetRandomSound()
+	}
+	err = sound.PlayDCA(file.FilePath, s.VoiceConnections[i.GuildID])
+	if err != nil {
+		return
+	}
+	file.NumberPlays++
+	if err = library.SetSoundData(file, db); err != nil {
+		log.Fatalln("When updating sound => " + err.Error())
 	}
 }
