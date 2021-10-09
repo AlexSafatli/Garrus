@@ -30,7 +30,7 @@ func AboutSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	defer chat.DeleteInteractionResponse(s, i)
-	chat.SendRawEmbedInteractionResponse(s, i, chat.GetRawEmbedMessage(s))
+	chat.SendRawEmbedInteractionResponse(s, i, chat.GetRawAboutEmbedMessage(s))
 }
 
 // SetEntranceMessageCommand sets an entrance for a user
@@ -314,6 +314,8 @@ func PlayRandomSoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCre
 	if err = library.SetSoundData(file, db); err != nil {
 		log.Fatalln("When updating sound => " + err.Error())
 	}
+	soundInfo := fmt.Sprintf("Played random sound `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
+	chat.SendEmbedMessage(s, m.ChannelID, playRandomSoundTitle, soundInfo+chat.Separator+m.Author.Mention(), map[string]string{})
 }
 
 // PlayRandomSoundSlashCommand plays a random sound in a voice channel
@@ -363,4 +365,6 @@ func PlayRandomSoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionC
 	if err = library.SetSoundData(file, db); err != nil {
 		log.Fatalln("When updating sound => " + err.Error())
 	}
+	soundInfo := fmt.Sprintf("Played random sound `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
+	chat.SendEmbedInteractionResponse(s, i, playRandomSoundTitle, soundInfo+chat.Separator+i.User.Mention(), map[string]string{})
 }
