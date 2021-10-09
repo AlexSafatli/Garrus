@@ -10,6 +10,6 @@ ARG VERSION
 
 RUN go mod download
 
-RUN go build -o /garrus -ldflags "-X version.Version=${VERSION}"
+RUN go build -o /garrus -ldflags "-X `go list ./version`.VersionStr=${VERSION}"
 
 CMD [ "/garrus" ]

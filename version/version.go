@@ -7,9 +7,14 @@ type version struct {
 	Developer string
 }
 
+var (
+	VersionStr   = "0.0.0"
+	GitCommitStr = "HEAD"
+)
+
 var Version = version{
 	Name:      "Garrus",
-	Version:   "0.0.0",
-	GitCommit: "HEAD",
+	Version:   VersionStr,
+	GitCommit: GitCommitStr,
 	Developer: "Asaph",
 }
