@@ -1,4 +1,4 @@
-package structs
+package trie
 
 type LowercaseTrie struct {
 	isWord      bool

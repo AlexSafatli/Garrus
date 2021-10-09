@@ -1,4 +1,4 @@
-package structs
+package trie
 
 var (
 	lowercaseAlphabet = []rune{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',

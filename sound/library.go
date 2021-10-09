@@ -1,7 +1,7 @@
 package sound
 
 import (
-	"github.com/AlexSafatli/Garrus/structs"
+	"github.com/AlexSafatli/Garrus/trie"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,7 +13,7 @@ type Library struct {
 	RootPath   string
 	SoundMap   map[string]*File
 	Categories []string
-	Trie       *structs.LowercaseTrie
+	Trie       *trie.LowercaseTrie
 }
 
 var library Library
@@ -70,7 +70,7 @@ func LoadSounds(rootPath string) error {
 		return errs[0]
 	}
 	l.Categories = cats
-	l.Trie = structs.NewLowercaseTrie(l.GetSoundNames())
+	l.Trie = trie.NewLowercaseTrie(l.GetSoundNames())
 	library = l
 	return nil
 }

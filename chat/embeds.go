@@ -3,6 +3,7 @@ package chat
 import (
 	"fmt"
 	"github.com/AlexSafatli/Garrus/sound"
+	"github.com/AlexSafatli/Garrus/version"
 	"log"
 
 	"github.com/bwmarrin/discordgo"
@@ -101,14 +102,7 @@ func SendWelcomeEmbedMessage(s *discordgo.Session, channelId string, user *disco
 }
 
 func SendAboutEmbedMessage(s *discordgo.Session, channelId string) *discordgo.Message {
-	var desc = fmt.Sprintf("My name is Garrus Vakarian and this is my rectum. I am a bot created by %s.", Version.Developer)
-	e := makeEmbed(Version.Name, desc, map[string]string{
-		"Usage":             "Most of my commands are located in slash commands (start typing with a `/` to see them). Some older commands are still found with the `.` prefix such as `.entrance`.",
-		RandomString(Whats): "I play sounds and automate things.",
-	})
-	e.Thumbnail = &discordgo.MessageEmbedThumbnail{
-		URL: s.State.User.AvatarURL("2048"),
-	}
+	e := GetRawEmbedMessage(s)
 	msg, err := s.ChannelMessageSendEmbed(channelId, e)
 	if err != nil {
 		log.Println("When sending embed in channel", channelId, "ran into error =>", err)
@@ -117,8 +111,8 @@ func SendAboutEmbedMessage(s *discordgo.Session, channelId string) *discordgo.Me
 }
 
 func GetRawEmbedMessage(s *discordgo.Session) *discordgo.MessageEmbed {
-	var desc = fmt.Sprintf("My name is Garrus Vakarian and this is my rectum. I am a bot created by %s.", Version.Developer)
-	e := makeEmbed("My Name Is "+Version.Name, desc, map[string]string{
+	var desc = fmt.Sprintf("My name is Garrus Vakarian and this is my rectum. I am a bot created by %s.", version.Version.Developer)
+	e := makeEmbed("My Name Is "+version.Version.Name, desc, map[string]string{
 		"Usage":             "Most of my commands are located in slash commands (start typing with a `/` to see them). Some older commands are still found with the `.` prefix such as `.entrance`.",
 		RandomString(Whats): "I play sounds and automate things.",
 	})
@@ -136,7 +130,7 @@ func makeEmbed(title string, description string, fields map[string]string) *disc
 		}
 	}
 	embed.Footer = &discordgo.MessageEmbedFooter{
-		Text: Version.Name + " " + Version.Version + Separator + Version.Developer,
+		Text: version.Version.Name + " " + version.Version.Version + Separator + version.Version.Developer,
 	}
 	return embed
 }
