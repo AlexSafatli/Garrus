@@ -20,7 +20,7 @@ const (
 
 // AboutMessageCommand takes a created message and returns an About embed message
 func AboutMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
-	chat.SendAboutEmbedMessage(s, m.ChannelID)
+	chat.SendRawEmbedMessage(s, m.ChannelID, chat.GetRawAboutEmbedMessage(s))
 }
 
 // AboutSlashCommand returns an About embed message for a slash command
@@ -153,22 +153,12 @@ func ListSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate
 	if len(args) == 1 {
 		query = args[0].StringValue()
 	}
-	if query == "" { // all sounds
-		for _, c := range sound.GetLibrary().Categories {
-			sendSoundsForCategoryForSlashCommand(s, i, c)
-		}
+	ok, category := sound.GetLibrary().Category(query)
+	if !ok {
+		chat.SendWarningInteractionEmbedForAction(s, i, listSoundsTitle, "Could not find any category with name "+query, nil)
 		return
 	}
-	var catFound bool
-	for _, c := range sound.GetLibrary().Categories {
-		if strings.ToLower(query) == strings.ToLower(c) {
-			sendSoundsForCategoryForSlashCommand(s, i, c)
-			catFound = true
-		}
-	}
-	if !catFound {
-		chat.SendWarningInteractionEmbedForAction(s, i, listSoundsTitle, "Could not find any category with name "+query, nil)
-	}
+	sendSoundsForCategoryForSlashCommand(s, i, category)
 }
 
 // PlaySoundMessageCommand plays a sound in a voice channel

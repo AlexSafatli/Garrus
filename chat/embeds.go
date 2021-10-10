@@ -72,6 +72,14 @@ func SendErrorEmbedMessage(s *discordgo.Session, channelId string, title string,
 	return msg
 }
 
+func SendRawEmbedMessage(s *discordgo.Session, channelId string, e *discordgo.MessageEmbed) *discordgo.Message {
+	msg, err := s.ChannelMessageSendEmbed(channelId, e)
+	if err != nil {
+		log.Println("When sending embed in channel", channelId, "ran into error =>", err)
+	}
+	return msg
+}
+
 func SendWelcomeEmbedMessage(s *discordgo.Session, channelId string, user *discordgo.User, soundInfo string) *discordgo.Message {
 	var entrance *sound.Entrance
 	var title, desc string
@@ -95,15 +103,6 @@ func SendWelcomeEmbedMessage(s *discordgo.Session, channelId string, user *disco
 	e.Thumbnail = &discordgo.MessageEmbedThumbnail{
 		URL: user.AvatarURL("2048"),
 	}
-	msg, err := s.ChannelMessageSendEmbed(channelId, e)
-	if err != nil {
-		log.Println("When sending embed in channel", channelId, "ran into error =>", err)
-	}
-	return msg
-}
-
-func SendAboutEmbedMessage(s *discordgo.Session, channelId string) *discordgo.Message {
-	e := GetRawAboutEmbedMessage(s)
 	msg, err := s.ChannelMessageSendEmbed(channelId, e)
 	if err != nil {
 		log.Println("When sending embed in channel", channelId, "ran into error =>", err)

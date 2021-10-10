@@ -110,13 +110,13 @@ func (b *Bot) initSlashCommands() {
 		{
 			Command: &discordgo.ApplicationCommand{
 				Name:        "list",
-				Description: "Lists all sound files (all sounds or those for an optional category)",
+				Description: "Lists all sound files for a category",
 				Options: []*discordgo.ApplicationCommandOption{
 					{
 						Type:        discordgo.ApplicationCommandOptionString,
 						Name:        "category",
 						Description: "A category by name (case-insensitive)",
-						Required:    false,
+						Required:    true,
 					},
 				},
 			},
