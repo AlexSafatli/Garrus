@@ -122,7 +122,7 @@ func SearchSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCrea
 	}
 	possibilities = searchSounds(query)
 	mb := chat.MessageBuilder{}
-	_ = mb.Write(fmt.Sprintf("Found **%d** possible sounds for query `%s`%s%s.\n\n", len(possibilities), query, chat.Separator, i.User.Mention()))
+	_ = mb.Write(fmt.Sprintf("Found **%d** possible sounds for query `%s`%s%s.\n\n", len(possibilities), query, chat.Separator, i.Member.Mention()))
 	if len(possibilities) > 0 {
 		for _, k := range possibilities {
 			_ = mb.Write("`?" + k + "` ")
@@ -245,14 +245,14 @@ func PlaySoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate)
 		defer db.Close()
 		file := library.SoundMap[query]
 		playSound(file, s.VoiceConnections[i.GuildID], db)
-		chat.SendEmbedInteractionResponse(s, i, playSoundTitle, "Played sound `"+query+"`"+chat.Separator+i.User.Mention(), map[string]string{})
+		chat.SendEmbedInteractionResponse(s, i, playSoundTitle, "Played sound `"+query+"`"+chat.Separator+i.Member.Mention(), map[string]string{})
 	} else {
 		msg := "Could not find a sound by name `" + query + "`"
 		closestMatch := library.GetClosestMatchingSoundID(query)
 		if len(closestMatch) > 0 {
 			msg += " Did you mean `" + closestMatch + "`?"
 		}
-		msg += chat.Separator + i.User.Mention()
+		msg += chat.Separator + i.Member.Mention()
 		chat.SendWarningEmbedInteractionResponse(s, i, playSoundTitle, msg)
 	}
 }
@@ -333,6 +333,6 @@ func PlayRandomSoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionC
 	}
 	playSound(file, s.VoiceConnections[i.GuildID], db)
 	soundInfo := fmt.Sprintf("Played random sound `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
-	msg := soundInfo + chat.Separator + i.User.Mention()
-	chat.SendEmbedInteractionResponse(s, i, playRandomSoundTitle, msg, map[string]string{})
+	msg := soundInfo + chat.Separator + i.Member.Mention()
+	chat.SendSimpleEmbedInteractionResponse(s, i, playRandomSoundTitle, msg)
 }
