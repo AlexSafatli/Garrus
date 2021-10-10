@@ -65,8 +65,10 @@ func DeleteBotMessages(s *discordgo.Session, channelID, aroundID string) {
 
 // DeleteInteractionResponse deletes a response sent from an interaction
 func DeleteInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	time.Sleep(time.Second * 10)
-	_ = s.InteractionResponseDelete(s.State.User.ID, i.Interaction)
+	go func() {
+		time.Sleep(time.Second * 10)
+		_ = s.InteractionResponseDelete(s.State.User.ID, i.Interaction)
+	}()
 }
 
 // SendInteractionResponseForAction sends a response to an interaction

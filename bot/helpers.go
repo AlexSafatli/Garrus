@@ -4,18 +4,35 @@ import (
 	"fmt"
 	"github.com/AlexSafatli/Garrus/chat"
 	"github.com/AlexSafatli/Garrus/sound"
+	"github.com/boltdb/bolt"
 	"github.com/bwmarrin/discordgo"
+	"log"
 	"strings"
 )
 
+func playSound(file *sound.File, vc *discordgo.VoiceConnection, db *bolt.DB) {
+	var err error
+	go func() {
+		err := sound.PlayDCA(file.FilePath, vc)
+		if err != nil {
+			log.Println("When playing sound " + file.ID + " => " + err.Error())
+		}
+	}()
+	file.NumberPlays++
+	if err = sound.GetLibrary().SetSoundData(file, db); err != nil {
+		log.Fatalln("When updating sound => " + err.Error())
+	}
+}
+
 func searchSounds(query string) (possibilities []string) {
+	query = strings.ToLower(query)
 	closest := sound.GetLibrary().GetClosestMatchingSoundID(query)
 	if len(closest) > 0 {
 		possibilities = append(possibilities, closest)
 	}
 	for _, name := range sound.GetLibrary().GetSoundNames() {
 		if strings.Contains(name, query) && name != closest {
-			possibilities = append(possibilities, closest)
+			possibilities = append(possibilities, name)
 		}
 	}
 	return

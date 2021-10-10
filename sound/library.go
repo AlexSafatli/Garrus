@@ -40,12 +40,22 @@ func (l *Library) doConversions() []error {
 	return errs
 }
 
-func (l *Library) GetSoundNames() []string {
-	keys := make([]string, 0, len(l.SoundMap))
+func (l *Library) Category(s string) (bool, string) {
+	s = strings.ToLower(s)
+	for _, c := range library.Categories {
+		if s == strings.ToLower(c) {
+			return true, c
+		}
+	}
+	return false, ""
+}
+
+func (l *Library) GetSoundNames() (keys []string) {
+	keys = make([]string, 0, len(l.SoundMap))
 	for k := range l.SoundMap {
 		keys = append(keys, k)
 	}
-	return keys
+	return
 }
 
 func (l *Library) Contains(s string) bool {

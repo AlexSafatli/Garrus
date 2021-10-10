@@ -18,6 +18,10 @@ func SendEmbedMessage(s *discordgo.Session, channelId string, title string, desc
 	return msg
 }
 
+func SendSimpleEmbedMessage(s *discordgo.Session, channelId string, title string, description string) *discordgo.Message {
+	return SendEmbedMessage(s, channelId, title, description, map[string]string{})
+}
+
 func SendWarningEmbedMessage(s *discordgo.Session, channelId, title, warning string) *discordgo.Message {
 	embed := makeEmbed(title, warning, map[string]string{})
 	embed.Color = discordColorOrange
@@ -44,6 +48,10 @@ func SendEmbedInteractionResponse(s *discordgo.Session, i *discordgo.Interaction
 		Embeds: []*discordgo.MessageEmbed{embed},
 	})
 	return m
+}
+
+func SendSimpleEmbedInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, title string, description string) *discordgo.Message {
+	return SendEmbedInteractionResponse(s, i, title, description, map[string]string{})
 }
 
 func SendRawEmbedInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed) *discordgo.Message {

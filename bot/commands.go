@@ -98,7 +98,7 @@ func SearchSoundsMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate
 			_ = mb.Write("`?" + k + "` ")
 		}
 		for _, msg := range mb.GetMessageStrings() {
-			chat.SendEmbedMessage(s, m.ChannelID, searchSoundsTitle, msg, map[string]string{})
+			chat.SendSimpleEmbedMessage(s, m.ChannelID, searchSoundsTitle, msg)
 		}
 	} else {
 		chat.SendWarningEmbedMessage(s, m.ChannelID, searchSoundsTitle, "Could not find any sounds for query `"+query+"`.")
@@ -128,7 +128,7 @@ func SearchSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCrea
 			_ = mb.Write("`?" + k + "` ")
 		}
 		for _, msg := range mb.GetMessageStrings() {
-			chat.SendEmbedInteractionResponse(s, i, searchSoundsTitle, msg, map[string]string{})
+			chat.SendSimpleEmbedInteractionResponse(s, i, searchSoundsTitle, msg)
 		}
 	} else {
 		chat.SendWarningEmbedInteractionResponse(s, i, searchSoundsTitle, "Could not find any sounds for query `"+query+"`.")
@@ -205,21 +205,14 @@ func PlaySoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		defer db.Close()
 		file := library.SoundMap[query]
-		err = sound.PlayDCA(file.FilePath, s.VoiceConnections[m.GuildID])
-		if err != nil {
-			return
-		}
-		file.NumberPlays++
-		if err = library.SetSoundData(file, db); err != nil {
-			log.Fatalln("When updating sound => " + err.Error())
-		}
+		playSound(file, s.VoiceConnections[m.GuildID], db)
 	} else {
-		msg := "Could not find a sound by name `" + query + "`."
+		msg := "Could not find a sound by name `" + query + "`"
 		closestMatch := library.GetClosestMatchingSoundID(query)
 		if len(closestMatch) > 0 {
 			msg += " Did you mean `" + closestMatch + "`?"
 		}
-		msg += " " + m.Author.Mention()
+		msg += chat.Separator + m.Author.Mention()
 		chat.SendWarningEmbedMessage(s, m.ChannelID, playSoundTitle, msg)
 	}
 }
@@ -251,22 +244,15 @@ func PlaySoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate)
 		}
 		defer db.Close()
 		file := library.SoundMap[query]
-		err = sound.PlayDCA(file.FilePath, s.VoiceConnections[i.GuildID])
-		if err != nil {
-			return
-		}
-		file.NumberPlays++
-		if err = library.SetSoundData(file, db); err != nil {
-			log.Fatalln("When updating sound => " + err.Error())
-		}
-		chat.SendEmbedInteractionResponse(s, i, playSoundTitle, "Played sound `"+query+"`.", map[string]string{})
+		playSound(file, s.VoiceConnections[i.GuildID], db)
+		chat.SendEmbedInteractionResponse(s, i, playSoundTitle, "Played sound `"+query+"`"+chat.Separator+i.User.Mention(), map[string]string{})
 	} else {
-		msg := "Could not find a sound by name `" + query + "`."
+		msg := "Could not find a sound by name `" + query + "`"
 		closestMatch := library.GetClosestMatchingSoundID(query)
 		if len(closestMatch) > 0 {
 			msg += " Did you mean `" + closestMatch + "`?"
 		}
-		msg += " " + i.User.Mention()
+		msg += chat.Separator + i.User.Mention()
 		chat.SendWarningEmbedInteractionResponse(s, i, playSoundTitle, msg)
 	}
 }
@@ -285,15 +271,12 @@ func PlayRandomSoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCre
 	}
 	var library = sound.GetLibrary()
 	if len(query) > 0 {
-		for _, c := range library.Categories {
-			if strings.ToLower(query) == strings.ToLower(c) {
-				category = c
-			}
+		var ok bool
+		ok, category = library.Category(query)
+		if !ok {
+			chat.SendWarningEmbedMessage(s, m.ChannelID, playRandomSoundTitle, "Could not find any category with name "+query)
+			return
 		}
-	}
-	if len(category) == 0 && len(query) > 0 {
-		chat.SendWarningEmbedMessage(s, m.ChannelID, playRandomSoundTitle, "Could not find any category with name "+query)
-		return
 	}
 	db, err := LoadDatabase()
 	if err != nil {
@@ -306,16 +289,10 @@ func PlayRandomSoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCre
 	} else {
 		file = library.GetRandomSound()
 	}
-	err = sound.PlayDCA(file.FilePath, s.VoiceConnections[m.GuildID])
-	if err != nil {
-		return
-	}
-	file.NumberPlays++
-	if err = library.SetSoundData(file, db); err != nil {
-		log.Fatalln("When updating sound => " + err.Error())
-	}
+	playSound(file, s.VoiceConnections[m.GuildID], db)
 	soundInfo := fmt.Sprintf("Played random sound `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
-	chat.SendEmbedMessage(s, m.ChannelID, playRandomSoundTitle, soundInfo+chat.Separator+m.Author.Mention(), map[string]string{})
+	msg := soundInfo + chat.Separator + m.Author.Mention()
+	chat.SendEmbedMessage(s, m.ChannelID, playRandomSoundTitle, msg, map[string]string{})
 }
 
 // PlayRandomSoundSlashCommand plays a random sound in a voice channel
@@ -336,15 +313,12 @@ func PlayRandomSoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionC
 	}
 	var library = sound.GetLibrary()
 	if len(query) > 0 {
-		for _, c := range library.Categories {
-			if strings.ToLower(query) == strings.ToLower(c) {
-				category = c
-			}
+		var ok bool
+		ok, category = library.Category(query)
+		if !ok {
+			chat.SendWarningEmbedInteractionResponse(s, i, playRandomSoundTitle, "Could not find any category with name "+query)
+			return
 		}
-	}
-	if len(category) == 0 && len(query) > 0 {
-		chat.SendWarningEmbedInteractionResponse(s, i, playRandomSoundTitle, "Could not find any category with name "+query)
-		return
 	}
 	db, err := LoadDatabase()
 	if err != nil {
@@ -357,14 +331,8 @@ func PlayRandomSoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionC
 	} else {
 		file = library.GetRandomSound()
 	}
-	err = sound.PlayDCA(file.FilePath, s.VoiceConnections[i.GuildID])
-	if err != nil {
-		return
-	}
-	file.NumberPlays++
-	if err = library.SetSoundData(file, db); err != nil {
-		log.Fatalln("When updating sound => " + err.Error())
-	}
+	playSound(file, s.VoiceConnections[i.GuildID], db)
 	soundInfo := fmt.Sprintf("Played random sound `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
-	chat.SendEmbedInteractionResponse(s, i, playRandomSoundTitle, soundInfo+chat.Separator+i.User.Mention(), map[string]string{})
+	msg := soundInfo + chat.Separator + i.User.Mention()
+	chat.SendEmbedInteractionResponse(s, i, playRandomSoundTitle, msg, map[string]string{})
 }
