@@ -67,12 +67,9 @@ func sendSoundsForCategoryForMessageCommand(s *discordgo.Session, channelID stri
 
 func sendSoundsForCategoryForSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate, c string) {
 	msgs, total := getSoundsForCategoryAsMessageStrings(c)
-	title := fmt.Sprintf("%s (%d)", c, total)
 	if total == 0 {
-		chat.SendEmbedInteractionResponse(s, i, title, "No sounds found for this category.", map[string]string{})
+		chat.SendSimpleInteractionEmbedForAction(s, i, c, "No sounds found for this category.", nil)
 	} else {
-		for _, msg := range msgs {
-			chat.SendEmbedInteractionResponse(s, i, title, msg, map[string]string{})
-		}
+		chat.SendSimpleInteractionEmbedsForAction(s, i, fmt.Sprintf("%s (%d)", c, total), msgs, nil)
 	}
 }

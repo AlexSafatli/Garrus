@@ -9,6 +9,38 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+func makeEmbed(title string, description string, fields map[string]string) *discordgo.MessageEmbed {
+	embed := &discordgo.MessageEmbed{Title: title, Description: description, Color: discordColorNavy}
+	if fields != nil {
+		for _, embedField := range makeMessageEmbedFieldSlice(fields) {
+			embed.Fields = append(embed.Fields, embedField)
+		}
+	}
+	embed.Footer = &discordgo.MessageEmbedFooter{
+		Text: version.Version.Name + " " + version.Version.Version + Separator + version.Version.Developer,
+	}
+	return embed
+}
+
+func makeWarningEmbed(title string, description string, fields map[string]string) *discordgo.MessageEmbed {
+	embed := makeEmbed(title, description, fields)
+	embed.Color = discordColorOrange
+	return embed
+}
+
+func makeErrorEmbed(title string, err error) *discordgo.MessageEmbed {
+	embed := makeEmbed(title, err.Error(), map[string]string{})
+	embed.Color = discordColorRed
+	return embed
+}
+
+func makeMessageEmbedFieldSlice(vals map[string]string) (arr []*discordgo.MessageEmbedField) {
+	for k, v := range vals {
+		arr = append(arr, &discordgo.MessageEmbedField{Name: k, Value: v})
+	}
+	return
+}
+
 func SendEmbedMessage(s *discordgo.Session, channelId string, title string, description string, fields map[string]string) *discordgo.Message {
 	embed := makeEmbed(title, description, fields)
 	msg, err := s.ChannelMessageSendEmbed(channelId, embed)
@@ -23,8 +55,7 @@ func SendSimpleEmbedMessage(s *discordgo.Session, channelId string, title string
 }
 
 func SendWarningEmbedMessage(s *discordgo.Session, channelId, title, warning string) *discordgo.Message {
-	embed := makeEmbed(title, warning, map[string]string{})
-	embed.Color = discordColorOrange
+	embed := makeWarningEmbed(title, warning, map[string]string{})
 	msg, err := s.ChannelMessageSendEmbed(channelId, embed)
 	if err != nil {
 		log.Println("When sending embed in channel", channelId, "ran into error =>", err)
@@ -33,50 +64,12 @@ func SendWarningEmbedMessage(s *discordgo.Session, channelId, title, warning str
 }
 
 func SendErrorEmbedMessage(s *discordgo.Session, channelId string, title string, err error) *discordgo.Message {
-	embed := makeEmbed(title, err.Error(), map[string]string{})
-	embed.Color = discordColorRed
+	embed := makeErrorEmbed(title, err)
 	msg, err := s.ChannelMessageSendEmbed(channelId, embed)
 	if err != nil {
 		log.Println("When sending embed in channel", channelId, "ran into error =>", err)
 	}
 	return msg
-}
-
-func SendEmbedInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, title string, description string, fields map[string]string) *discordgo.Message {
-	embed := makeEmbed(title, description, fields)
-	m, _ := s.FollowupMessageCreate(s.State.User.ID, i.Interaction, true, &discordgo.WebhookParams{
-		Embeds: []*discordgo.MessageEmbed{embed},
-	})
-	return m
-}
-
-func SendSimpleEmbedInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, title string, description string) *discordgo.Message {
-	return SendEmbedInteractionResponse(s, i, title, description, map[string]string{})
-}
-
-func SendRawEmbedInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed) *discordgo.Message {
-	m, _ := s.FollowupMessageCreate(s.State.User.ID, i.Interaction, true, &discordgo.WebhookParams{
-		Embeds: []*discordgo.MessageEmbed{embed},
-	})
-	return m
-}
-
-func SendWarningEmbedInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, title, warning string) *discordgo.Message {
-	embed := makeEmbed(title, warning, map[string]string{})
-	embed.Color = discordColorOrange
-	m, _ := s.FollowupMessageCreate(s.State.User.ID, i.Interaction, true, &discordgo.WebhookParams{
-		Embeds: []*discordgo.MessageEmbed{embed},
-	})
-	return m
-}
-
-func SendErrorEmbedInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, title string, err error) *discordgo.Message {
-	embed := makeEmbed(title, err.Error(), map[string]string{})
-	embed.Color = discordColorRed
-	m, _ := s.FollowupMessageCreate(s.State.User.ID, i.Interaction, true, &discordgo.WebhookParams{
-		Embeds: []*discordgo.MessageEmbed{embed},
-	})
-	return m
 }
 
 func SendWelcomeEmbedMessage(s *discordgo.Session, channelId string, user *discordgo.User, soundInfo string) *discordgo.Message {
@@ -128,24 +121,4 @@ func GetRawAboutEmbedMessage(s *discordgo.Session) *discordgo.MessageEmbed {
 		URL: s.State.User.AvatarURL("2048"),
 	}
 	return e
-}
-
-func makeEmbed(title string, description string, fields map[string]string) *discordgo.MessageEmbed {
-	embed := &discordgo.MessageEmbed{Title: title, Description: description, Color: discordColorNavy}
-	if fields != nil {
-		for _, embedField := range makeMessageEmbedFieldSlice(fields) {
-			embed.Fields = append(embed.Fields, embedField)
-		}
-	}
-	embed.Footer = &discordgo.MessageEmbedFooter{
-		Text: version.Version.Name + " " + version.Version.Version + Separator + version.Version.Developer,
-	}
-	return embed
-}
-
-func makeMessageEmbedFieldSlice(vals map[string]string) (arr []*discordgo.MessageEmbedField) {
-	for k, v := range vals {
-		arr = append(arr, &discordgo.MessageEmbedField{Name: k, Value: v})
-	}
-	return
 }

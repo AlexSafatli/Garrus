@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"errors"
 	"fmt"
 	"github.com/AlexSafatli/Garrus/chat"
 	"github.com/AlexSafatli/Garrus/sound"
@@ -26,11 +25,7 @@ func AboutMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 // AboutSlashCommand returns an About embed message for a slash command
 func AboutSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if err := chat.SendInteractionAckForAction(s, i, nil); err != nil {
-		return
-	}
-	defer chat.DeleteInteractionResponse(s, i)
-	chat.SendRawEmbedInteractionResponse(s, i, chat.GetRawAboutEmbedMessage(s))
+	chat.SendInteractionRawEmbedForAction(s, i, chat.GetRawAboutEmbedMessage(s), nil)
 }
 
 // SetEntranceMessageCommand sets an entrance for a user
@@ -109,16 +104,9 @@ func SearchSoundsMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate
 func SearchSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var query string
 	var possibilities []string
-	if err := chat.SendInteractionAckForAction(s, i, nil); err != nil {
-		return
-	}
-	defer chat.DeleteInteractionResponse(s, i)
 	args := i.ApplicationCommandData().Options
 	if len(args) == 1 {
 		query = args[0].StringValue()
-	} else {
-		chat.SendErrorEmbedInteractionResponse(s, i, searchSoundsTitle, errors.New("need a query to search for"))
-		return
 	}
 	possibilities = searchSounds(query)
 	mb := chat.MessageBuilder{}
@@ -127,11 +115,9 @@ func SearchSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCrea
 		for _, k := range possibilities {
 			_ = mb.Write("`?" + k + "` ")
 		}
-		for _, msg := range mb.GetMessageStrings() {
-			chat.SendSimpleEmbedInteractionResponse(s, i, searchSoundsTitle, msg)
-		}
+		chat.SendSimpleInteractionEmbedsForAction(s, i, searchSoundsTitle, mb.GetMessageStrings(), nil)
 	} else {
-		chat.SendWarningEmbedInteractionResponse(s, i, searchSoundsTitle, "Could not find any sounds for query `"+query+"`.")
+		chat.SendWarningInteractionEmbedForAction(s, i, searchSoundsTitle, "Could not find any sounds for query `"+query+"`.", nil)
 	}
 }
 
@@ -163,10 +149,6 @@ func ListSoundsMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) 
 // ListSoundsSlashCommand returns a collection of sounds over multiple messages
 func ListSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var query string
-	if err := chat.SendInteractionAckForAction(s, i, nil); err != nil {
-		return
-	}
-	defer chat.DeleteInteractionResponse(s, i)
 	args := i.ApplicationCommandData().Options
 	if len(args) == 1 {
 		query = args[0].StringValue()
@@ -185,7 +167,7 @@ func ListSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate
 		}
 	}
 	if !catFound {
-		chat.SendWarningEmbedInteractionResponse(s, i, listSoundsTitle, "Could not find any category with name "+query)
+		chat.SendWarningInteractionEmbedForAction(s, i, listSoundsTitle, "Could not find any category with name "+query, nil)
 	}
 }
 
@@ -220,21 +202,14 @@ func PlaySoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 // PlaySoundSlashCommand plays a sound in a voice channel
 func PlaySoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var query string
-	if err := chat.SendInteractionAckForAction(s, i, nil); err != nil {
-		return
-	}
-	defer chat.DeleteInteractionResponse(s, i)
 	if s.VoiceConnections[i.GuildID] == nil {
 		// Not in a voice channel
-		chat.SendWarningEmbedInteractionResponse(s, i, playSoundTitle, "I am not in a voice channel. Join one first!")
+		chat.SendWarningInteractionEmbedForAction(s, i, playSoundTitle, "I am not in a voice channel. Join one first!", nil)
 		return
 	}
 	args := i.ApplicationCommandData().Options
 	if len(args) == 1 {
 		query = args[0].StringValue()
-	} else {
-		chat.SendErrorEmbedInteractionResponse(s, i, playSoundTitle, errors.New("need a sound to play"))
-		return
 	}
 	var library = sound.GetLibrary()
 	if library.Contains(query) {
@@ -245,7 +220,7 @@ func PlaySoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate)
 		defer db.Close()
 		file := library.SoundMap[query]
 		playSound(file, s.VoiceConnections[i.GuildID], db)
-		chat.SendEmbedInteractionResponse(s, i, playSoundTitle, "Played sound `"+query+"`"+chat.Separator+i.Member.Mention(), map[string]string{})
+		chat.SendInteractionResponseForAction(s, i, "Played sound `"+query+"`.", nil)
 	} else {
 		msg := "Could not find a sound by name `" + query + "`"
 		closestMatch := library.GetClosestMatchingSoundID(query)
@@ -253,7 +228,7 @@ func PlaySoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate)
 			msg += " Did you mean `" + closestMatch + "`?"
 		}
 		msg += chat.Separator + i.Member.Mention()
-		chat.SendWarningEmbedInteractionResponse(s, i, playSoundTitle, msg)
+		chat.SendWarningInteractionEmbedForAction(s, i, playSoundTitle, msg, nil)
 	}
 }
 
@@ -298,13 +273,9 @@ func PlayRandomSoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCre
 // PlayRandomSoundSlashCommand plays a random sound in a voice channel
 func PlayRandomSoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var query, category string
-	if err := chat.SendInteractionAckForAction(s, i, nil); err != nil {
-		return
-	}
-	defer chat.DeleteInteractionResponse(s, i)
 	if s.VoiceConnections[i.GuildID] == nil {
 		// Not in a voice channel
-		chat.SendWarningEmbedInteractionResponse(s, i, playSoundTitle, "I am not in a voice channel. Join one first!")
+		chat.SendWarningInteractionEmbedForAction(s, i, playRandomSoundTitle, "I am not in a voice channel. Join one first!", nil)
 		return
 	}
 	args := i.ApplicationCommandData().Options
@@ -316,7 +287,7 @@ func PlayRandomSoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionC
 		var ok bool
 		ok, category = library.Category(query)
 		if !ok {
-			chat.SendWarningEmbedInteractionResponse(s, i, playRandomSoundTitle, "Could not find any category with name "+query)
+			chat.SendWarningInteractionEmbedForAction(s, i, playRandomSoundTitle, "Could not find any category with name "+query, nil)
 			return
 		}
 	}
@@ -334,5 +305,5 @@ func PlayRandomSoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionC
 	playSound(file, s.VoiceConnections[i.GuildID], db)
 	soundInfo := fmt.Sprintf("Played random sound `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
 	msg := soundInfo + chat.Separator + i.Member.Mention()
-	chat.SendSimpleEmbedInteractionResponse(s, i, playRandomSoundTitle, msg)
+	chat.SendSimpleInteractionEmbedForAction(s, i, playRandomSoundTitle, msg, nil)
 }
