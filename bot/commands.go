@@ -15,6 +15,7 @@ const (
 	playSoundTitle       = "Play Sound"
 	playRandomSoundTitle = "Play Random Sound"
 	searchSoundsTitle    = "Search Sounds"
+	listCategoriesTitle  = "List Categories"
 	listSoundsTitle      = "List Sounds"
 )
 
@@ -134,16 +135,12 @@ func ListSoundsMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) 
 		}
 		return
 	}
-	var catFound bool
-	for _, c := range sound.GetLibrary().Categories {
-		if strings.ToLower(query) == strings.ToLower(c) {
-			sendSoundsForCategoryForMessageCommand(s, m.ChannelID, c)
-			catFound = true
-		}
-	}
-	if !catFound {
+	ok, category := sound.GetLibrary().Category(query)
+	if !ok {
 		chat.SendWarningEmbedMessage(s, m.ChannelID, listSoundsTitle, "Could not find any category with name "+query)
+		return
 	}
+	sendSoundsForCategoryForMessageCommand(s, m.ChannelID, category)
 }
 
 // ListSoundsSlashCommand returns a collection of sounds over multiple messages
@@ -159,6 +156,16 @@ func ListSoundsSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate
 		return
 	}
 	sendSoundsForCategoryForSlashCommand(s, i, category)
+}
+
+// ListCategoriesMessageCommand returns the list of categories
+func ListCategoriesMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
+	chat.SendSimpleEmbedMessage(s, m.ChannelID, listCategoriesTitle, chat.SliceToMessageString(sound.GetLibrary().Categories))
+}
+
+// ListCategoriesSlashCommand returns the list of categories
+func ListCategoriesSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	chat.SendSimpleInteractionEmbedForAction(s, i, listCategoriesTitle, chat.SliceToMessageString(sound.GetLibrary().Categories), nil)
 }
 
 // PlaySoundMessageCommand plays a sound in a voice channel

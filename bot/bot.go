@@ -52,6 +52,10 @@ func (b *Bot) initMessageCommands() {
 			Function: ListSoundsMessageCommand,
 		},
 		{
+			Command:  ".categories",
+			Function: ListCategoriesMessageCommand,
+		},
+		{
 			Command:  ".random",
 			Function: PlayRandomSoundMessageCommand,
 		},
@@ -121,6 +125,13 @@ func (b *Bot) initSlashCommands() {
 				},
 			},
 			Function: ListSoundsSlashCommand,
+		},
+		{
+			Command: &discordgo.ApplicationCommand{
+				Name:        "categories",
+				Description: "Lists all categories",
+			},
+			Function: ListCategoriesSlashCommand,
 		},
 		{
 			Command: &discordgo.ApplicationCommand{

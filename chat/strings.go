@@ -59,3 +59,13 @@ func RandomString(s []string) string {
 	i := rand.Intn(len(s))
 	return s[i]
 }
+
+func SliceToMessageString(slice []string) (str string) {
+	for i, v := range slice {
+		str += "`" + v + "`"
+		if i < len(slice)-1 {
+			str += ", "
+		}
+	}
+	return
+}
