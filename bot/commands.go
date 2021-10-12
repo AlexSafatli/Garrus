@@ -184,7 +184,7 @@ func PlaySoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		defer db.Close()
 		file := library.SoundMap[query]
-		playSound(file, s.VoiceConnections[m.GuildID], db)
+		playSoundWithSave(file, s.VoiceConnections[m.GuildID], db)
 	} else {
 		msg := "Could not find a sound by name `" + query + "`"
 		closestMatch := library.GetClosestMatchingSoundID(query)
@@ -216,7 +216,7 @@ func PlaySoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate)
 		}
 		defer db.Close()
 		file := library.SoundMap[query]
-		playSound(file, s.VoiceConnections[i.GuildID], db)
+		playSoundWithSave(file, s.VoiceConnections[i.GuildID], db)
 		chat.SendInteractionResponseForAction(s, i, "Played sound `"+query+"`.", nil)
 	} else {
 		msg := "Could not find a sound by name `" + query + "`"
@@ -261,7 +261,7 @@ func PlayRandomSoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCre
 	} else {
 		file = library.GetRandomSound()
 	}
-	playSound(file, s.VoiceConnections[m.GuildID], db)
+	playSoundWithSave(file, s.VoiceConnections[m.GuildID], db)
 	soundInfo := fmt.Sprintf("Played random sound `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
 	msg := soundInfo + chat.Separator + m.Author.Mention()
 	chat.SendEmbedMessage(s, m.ChannelID, playRandomSoundTitle, msg, map[string]string{})
@@ -299,7 +299,7 @@ func PlayRandomSoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionC
 	} else {
 		file = library.GetRandomSound()
 	}
-	playSound(file, s.VoiceConnections[i.GuildID], db)
+	playSoundWithSave(file, s.VoiceConnections[i.GuildID], db)
 	soundInfo := fmt.Sprintf("Played random sound `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
 	msg := soundInfo + chat.Separator + i.Member.Mention()
 	chat.SendSimpleInteractionEmbedForAction(s, i, playRandomSoundTitle, msg, nil)
