@@ -80,7 +80,6 @@ func followOnMove(b *Bot, s *discordgo.Session, vs *discordgo.VoiceStateUpdate) 
 	}
 	if len(vs.ChannelID) == 0 { // empty target voice channel
 		defer closeConnectionOrChangeChannelsIfAlone(s, vs.GuildID)
-		defer deleteOldBotMessages(b, vs.GuildID, getMainChannelIDForGuild(b, vs.GuildID))
 	}
 	if len(vs.ChannelID) > 0 && (vs.BeforeUpdate == nil || vs.BeforeUpdate.ChannelID != vs.ChannelID) {
 		if err = openConnection(s, vs.ChannelID, vs.GuildID); err != nil {
