@@ -82,9 +82,3 @@ func getMainChannelIDForGuild(b *Bot, guildID string) string {
 	}
 	return id
 }
-
-func deleteOldBotMessages(bot *Bot, guildID, channelID string) {
-	if lastMessageID, ok := bot.lastSentEntranceMessage[guildID]; ok {
-		go chat.DeleteBotMessages(bot.Session, channelID, lastMessageID)
-	}
-}

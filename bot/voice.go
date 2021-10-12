@@ -105,7 +105,9 @@ func followOnMove(b *Bot, s *discordgo.Session, vs *discordgo.VoiceStateUpdate) 
 			if err != nil {
 				return
 			}
-			deleteOldBotMessages(b, vs.GuildID, channelID)
+			if lastMessageID, ok := b.lastSentEntranceMessage[vs.GuildID]; ok {
+				chat.DeleteBotMessages(s, channelID, lastMessageID)
+			}
 			m := chat.SendWelcomeEmbedMessage(b.Session, channelID, u, soundInfo)
 			b.lastSentEntranceMessage[vs.GuildID] = m.ID // keep track of the last sent entrance message
 
