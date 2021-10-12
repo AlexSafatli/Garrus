@@ -25,6 +25,8 @@ features.
 
 - **Sound file** maintenance
     - Possible future use of S3 to store clips
+    - Way to directly upload sound files to the Discord server and have the bot
+      consume it/download it
 - **String** responses read from files
     - These should be read only at launch and be selected at random at different
       instances including welcome messages
