@@ -79,9 +79,10 @@ func followOnMove(b *Bot, s *discordgo.Session, vs *discordgo.VoiceStateUpdate) 
 		return
 	}
 	if len(vs.ChannelID) == 0 { // empty target voice channel
-		closeConnectionOrChangeChannelsIfAlone(s, vs.GuildID)
-		deleteOldBotMessages(b, vs.GuildID, getMainChannelIDForGuild(b, vs.GuildID))
-	} else if vs.BeforeUpdate == nil || vs.BeforeUpdate.ChannelID != vs.ChannelID {
+		defer closeConnectionOrChangeChannelsIfAlone(s, vs.GuildID)
+		defer deleteOldBotMessages(b, vs.GuildID, getMainChannelIDForGuild(b, vs.GuildID))
+	}
+	if len(vs.ChannelID) > 0 && (vs.BeforeUpdate == nil || vs.BeforeUpdate.ChannelID != vs.ChannelID) {
 		if err = openConnection(s, vs.ChannelID, vs.GuildID); err != nil {
 			log.Printf("Error when joining voice channel %s -> %v", vs.ChannelID, err)
 			return
