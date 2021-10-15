@@ -12,8 +12,7 @@ import (
 func openConnection(s *discordgo.Session, channelID, guildID string) error {
 	existing, ok := s.VoiceConnections[guildID]
 	if ok && existing.ChannelID != channelID || !ok {
-		_, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
-		if err != nil {
+		if _, err := s.ChannelVoiceJoin(guildID, channelID, false, true); err != nil {
 			return err
 		}
 	}
@@ -22,7 +21,7 @@ func openConnection(s *discordgo.Session, channelID, guildID string) error {
 
 func closeConnectionOrChangeChannelsIfAlone(s *discordgo.Session, guildID string) {
 	if s.VoiceConnections[guildID] == nil {
-		return
+		return // no connection opened
 	}
 	g, err := s.State.Guild(guildID)
 	if err != nil {
@@ -30,6 +29,7 @@ func closeConnectionOrChangeChannelsIfAlone(s *discordgo.Session, guildID string
 	}
 	var totalUsersFound int
 	var usersFound map[string]int
+
 	usersFound = make(map[string]int)
 	for _, vs := range g.VoiceStates {
 		if vs.UserID != s.State.User.ID {
@@ -37,6 +37,7 @@ func closeConnectionOrChangeChannelsIfAlone(s *discordgo.Session, guildID string
 			totalUsersFound++
 		}
 	}
+
 	if totalUsersFound == 0 {
 		if err = s.VoiceConnections[guildID].Disconnect(); err != nil {
 			s.VoiceConnections[guildID].Close()
@@ -57,18 +58,16 @@ func closeConnectionOrChangeChannelsIfAlone(s *discordgo.Session, guildID string
 
 func playSound(file *sound.File, vc *discordgo.VoiceConnection) {
 	go func() {
-		err := sound.PlayDCA(file.FilePath, vc)
-		if err != nil {
-			log.Println("When playing sound " + file.ID + " => " + err.Error())
+		if err := sound.PlayDCA(file.FilePath, vc); err != nil {
+			log.Println("When playing sound " + file.ID + " -> " + err.Error())
 		}
 	}()
 }
 
 func playSoundWithSave(file *sound.File, vc *discordgo.VoiceConnection, db *bolt.DB) {
 	playSound(file, vc)
-	var err error
 	file.NumberPlays++
-	if err = sound.GetLibrary().SetSoundData(file, db); err != nil {
+	if err := sound.GetLibrary().SetSoundData(file, db); err != nil {
 		log.Fatalln("When updating sound => " + err.Error())
 	}
 }
@@ -98,9 +97,8 @@ func followOnMove(b *Bot, s *discordgo.Session, vs *discordgo.VoiceStateUpdate) 
 			playSound(file, b.VoiceConnections[vs.GuildID])
 
 			// Send a welcome message, delete old bot messages
-			var soundInfo string
 			channelID := getMainChannelIDForGuild(b, vs.GuildID)
-			soundInfo = fmt.Sprintf("Played `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
+			soundInfo := fmt.Sprintf("Played `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
 			u, err := b.Session.User(vs.UserID)
 			if err != nil {
 				return
@@ -112,10 +110,7 @@ func followOnMove(b *Bot, s *discordgo.Session, vs *discordgo.VoiceStateUpdate) 
 			b.lastSentEntranceMessage[vs.GuildID] = m.ID // keep track of the last sent entrance message
 
 			// Load database and save changes to database
-			db, err := LoadDatabase()
-			if err != nil {
-				log.Fatalln("Could not load database", err)
-			}
+			db := LoadDatabase()
 			defer db.Close()
 			file.NumberPlays++
 			if err = sound.GetLibrary().SetSoundData(file, db); err != nil {

@@ -26,10 +26,7 @@ func main() {
 
 	// Load flat file database
 	bot.SetDatabasePath(configValues.DbPath)
-	db, err := bot.LoadDatabase()
-	if err != nil {
-		log.Fatalln("Could not load database", err)
-	}
+	db := bot.LoadDatabase()
 	log.Println("Loaded database from " + configValues.DbPath)
 
 	// Load entrances

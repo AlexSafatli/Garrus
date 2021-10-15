@@ -2,6 +2,7 @@ package bot
 
 import (
 	"github.com/boltdb/bolt"
+	"log"
 )
 
 var (
@@ -12,6 +13,10 @@ func SetDatabasePath(path string) {
 	dbPath = path
 }
 
-func LoadDatabase() (*bolt.DB, error) {
-	return bolt.Open(dbPath, 0600, nil)
+func LoadDatabase() *bolt.DB {
+	db, err := bolt.Open(dbPath, 0600, nil)
+	if err != nil {
+		log.Fatalln("Could not load database", err)
+	}
+	return db
 }

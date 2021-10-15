@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/AlexSafatli/Garrus/chat"
 	"github.com/AlexSafatli/Garrus/sound"
-	"log"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -15,7 +14,7 @@ const (
 	playSoundTitle       = "Play Sound"
 	playRandomSoundTitle = "Play Random Sound"
 	searchSoundsTitle    = "Search Sounds"
-	listCategoriesTitle  = "List Categories"
+	listCategoriesTitle  = "Categories"
 	listSoundsTitle      = "List Sounds"
 )
 
@@ -32,16 +31,13 @@ func AboutSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // SetEntranceMessageCommand sets an entrance for a user
 func SetEntranceMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	var soundID, content, pmsg string
-	db, err := LoadDatabase()
-	if err != nil {
-		log.Fatalln("Could not load database", err)
-	}
+	db := LoadDatabase()
 	defer db.Close()
 	i := strings.Index(m.Content, " ")
 	if i > 0 {
 		content = m.Content[i+1:]
 	} else {
-		err = sound.DeleteEntranceForUser(m.Author.ID, db)
+		err := sound.DeleteEntranceForUser(m.Author.ID, db)
 		chat.SendSimpleMessageResponseForAction(s, m.ChannelID, entranceTitle, "Cleared your entrance.", err)
 		return
 	}
@@ -51,17 +47,14 @@ func SetEntranceMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate)
 	} else if len(args) >= 2 {
 		pmsg = args[1]
 	}
-	err = sound.SetEntranceForUser(m.Author.ID, soundID, pmsg, db)
+	err := sound.SetEntranceForUser(m.Author.ID, soundID, pmsg, db)
 	chat.SendSimpleMessageResponseForAction(s, m.ChannelID, entranceTitle, fmt.Sprintf("Set your entrance to `%s`.", soundID), err)
 }
 
 // SetEntranceSlashCommand sets an entrance for a user
 func SetEntranceSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var soundID, pmsg string
-	db, err := LoadDatabase()
-	if err != nil {
-		log.Fatalln("Could not load database", err)
-	}
+	db := LoadDatabase()
 	defer db.Close()
 	args := i.ApplicationCommandData().Options
 	if len(args) >= 1 {
@@ -73,7 +66,7 @@ func SetEntranceSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreat
 		err := sound.DeleteEntranceForUser(i.Member.User.ID, db)
 		chat.SendInteractionResponseForAction(s, i, "Cleared your entrance.", err)
 	} else {
-		err = sound.SetEntranceForUser(i.Member.User.ID, soundID, pmsg, db)
+		err := sound.SetEntranceForUser(i.Member.User.ID, soundID, pmsg, db)
 		chat.SendInteractionResponseForAction(s, i, fmt.Sprintf("Set your entrance to `%s`.", soundID), err)
 	}
 }
@@ -178,10 +171,7 @@ func PlaySoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	var query = m.Content[1:] // assumes '?' (or one character) start prefix
 	var library = sound.GetLibrary()
 	if library.Contains(query) {
-		db, err := LoadDatabase()
-		if err != nil {
-			log.Fatalln("Could not load database", err)
-		}
+		db := LoadDatabase()
 		defer db.Close()
 		file := library.SoundMap[query]
 		playSoundWithSave(file, s.VoiceConnections[m.GuildID], db)
@@ -210,10 +200,7 @@ func PlaySoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate)
 	}
 	var library = sound.GetLibrary()
 	if library.Contains(query) {
-		db, err := LoadDatabase()
-		if err != nil {
-			log.Fatalln("Could not load database", err)
-		}
+		db := LoadDatabase()
 		defer db.Close()
 		file := library.SoundMap[query]
 		playSoundWithSave(file, s.VoiceConnections[i.GuildID], db)
@@ -250,10 +237,7 @@ func PlayRandomSoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCre
 			return
 		}
 	}
-	db, err := LoadDatabase()
-	if err != nil {
-		log.Fatalln("Could not load database", err)
-	}
+	db := LoadDatabase()
 	defer db.Close()
 	var file *sound.File
 	if len(category) > 0 {
@@ -288,10 +272,7 @@ func PlayRandomSoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionC
 			return
 		}
 	}
-	db, err := LoadDatabase()
-	if err != nil {
-		log.Fatalln("Could not load database", err)
-	}
+	db := LoadDatabase()
 	defer db.Close()
 	var file *sound.File
 	if len(category) > 0 {

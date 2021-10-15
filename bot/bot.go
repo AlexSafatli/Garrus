@@ -78,7 +78,7 @@ func (b *Bot) initSlashCommands() {
 		{
 			Command: &discordgo.ApplicationCommand{
 				Name:        "entrance",
-				Description: "Set your entrance sound when joining a voice channel (or clear it if nothing is given)",
+				Description: "Set your entrance sound when joining a voice channel (or clear it if an empty string is given)",
 				Options: []*discordgo.ApplicationCommandOption{
 					{
 						Type:        discordgo.ApplicationCommandOptionString,
