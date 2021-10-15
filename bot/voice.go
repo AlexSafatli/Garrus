@@ -92,8 +92,12 @@ func followOnMove(b *Bot, s *discordgo.Session, vs *discordgo.VoiceStateUpdate) 
 
 			// Get the file to play
 			var file = sound.GetLibrary().SoundMap[entrance.SoundID]
+			if file == nil {
+				log.Println("File was not found for entrance", entrance)
+				return
+			}
 
-			// Play it in a goroutine
+			// Play it in a goroutine; do not increment play count
 			playSound(file, b.VoiceConnections[vs.GuildID])
 
 			// Send a welcome message, delete old bot messages
@@ -108,14 +112,6 @@ func followOnMove(b *Bot, s *discordgo.Session, vs *discordgo.VoiceStateUpdate) 
 			}
 			m := chat.SendWelcomeEmbedMessage(b.Session, channelID, u, soundInfo)
 			b.lastSentEntranceMessage[vs.GuildID] = m.ID // keep track of the last sent entrance message
-
-			// Load database and save changes to database
-			db := LoadDatabase()
-			defer db.Close()
-			file.NumberPlays++
-			if err = sound.GetLibrary().SetSoundData(file, db); err != nil {
-				log.Fatalln("When updating sound => " + err.Error())
-			}
 		}
 	}
 }
