@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-func openConnection(s *discordgo.Session, channelID, guildID string) error {
+func openVoiceConnection(s *discordgo.Session, channelID, guildID string) error {
 	existing, ok := s.VoiceConnections[guildID]
 	if ok && existing.ChannelID != channelID || !ok {
 		if _, err := s.ChannelVoiceJoin(guildID, channelID, false, true); err != nil {
@@ -19,7 +19,7 @@ func openConnection(s *discordgo.Session, channelID, guildID string) error {
 	return nil
 }
 
-func closeConnectionOrChangeChannelsIfAlone(s *discordgo.Session, guildID string) {
+func closeVoiceConnectionOrChangeChannelsIfAlone(s *discordgo.Session, guildID string) {
 	if s.VoiceConnections[guildID] == nil {
 		return // no connection opened
 	}
@@ -78,10 +78,10 @@ func followOnMove(b *Bot, s *discordgo.Session, vs *discordgo.VoiceStateUpdate) 
 		return
 	}
 	if len(vs.ChannelID) == 0 { // empty target voice channel
-		defer closeConnectionOrChangeChannelsIfAlone(s, vs.GuildID)
+		defer closeVoiceConnectionOrChangeChannelsIfAlone(s, vs.GuildID)
 	}
 	if len(vs.ChannelID) > 0 && (vs.BeforeUpdate == nil || vs.BeforeUpdate.ChannelID != vs.ChannelID) {
-		if err = openConnection(s, vs.ChannelID, vs.GuildID); err != nil {
+		if err = openVoiceConnection(s, vs.ChannelID, vs.GuildID); err != nil {
 			log.Printf("Error when joining voice channel %s -> %v", vs.ChannelID, err)
 			return
 		}
