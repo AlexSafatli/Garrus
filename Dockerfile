@@ -6,6 +6,9 @@ WORKDIR /app
 
 COPY . ./
 
+RUN apk update \
+    && apk add ffmpeg
+
 ARG VERSION
 
 RUN go mod download

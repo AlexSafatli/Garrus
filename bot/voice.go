@@ -74,13 +74,14 @@ func playSoundWithSave(file *sound.File, vc *discordgo.VoiceConnection, db *bolt
 
 func followOnMove(b *Bot, s *discordgo.Session, vs *discordgo.VoiceStateUpdate) {
 	var err error
+	_, ok := s.VoiceConnections[vs.GuildID]
 	if vs.UserID == s.State.User.ID { // move done by bot
 		return
 	}
 	if len(vs.ChannelID) == 0 { // empty target voice channel
 		defer closeVoiceConnectionOrChangeChannelsIfAlone(s, vs.GuildID)
 	}
-	if len(vs.ChannelID) > 0 && (vs.BeforeUpdate == nil || vs.BeforeUpdate.ChannelID != vs.ChannelID) {
+	if len(vs.ChannelID) > 0 && !ok && (vs.BeforeUpdate == nil || vs.BeforeUpdate.ChannelID != vs.ChannelID) {
 		if err = openVoiceConnection(s, vs.ChannelID, vs.GuildID); err != nil {
 			log.Printf("Error when joining voice channel %s -> %v", vs.ChannelID, err)
 			return
