@@ -28,7 +28,7 @@ func AboutSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	chat.SendInteractionRawEmbedForAction(s, i, chat.GetRawAboutEmbedMessage(s), nil)
 }
 
-// SetEntranceMessageCommand sets an entrance for a user
+// SetEntranceMessageCommand sets an entrance for the invoking user
 func SetEntranceMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	var soundID, content, pmsg string
 	db := LoadDatabase()
@@ -51,7 +51,7 @@ func SetEntranceMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate)
 	chat.SendSimpleMessageResponseForAction(s, m.ChannelID, entranceTitle, fmt.Sprintf("Set your entrance to `%s`.", soundID), err)
 }
 
-// SetEntranceSlashCommand sets an entrance for a user
+// SetEntranceSlashCommand sets an entrance for the invoking user
 func SetEntranceSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var soundID, pmsg string
 	db := LoadDatabase()
