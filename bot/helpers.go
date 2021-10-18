@@ -84,14 +84,14 @@ func getMainChannelIDForGuild(b *Bot, guildID string) string {
 	return id
 }
 
-func authenticate(b *Bot, guildID, userID string) bool {
-	m, err := b.Session.GuildMember(guildID, userID)
+func authenticate(s *discordgo.Session, guildID, userID string) bool {
+	m, err := s.GuildMember(guildID, userID)
 	if err != nil {
 		log.Println("Could not authenticate user", userID)
 		return false
 	}
 	for _, roleID := range m.Roles {
-		role, err := b.State.Role(guildID, roleID)
+		role, err := s.State.Role(guildID, roleID)
 		if err != nil {
 			return false
 		}
