@@ -163,10 +163,13 @@ func ListCategoriesSlashCommand(s *discordgo.Session, i *discordgo.InteractionCr
 
 // PlaySoundMessageCommand plays a sound in a voice channel
 func PlaySoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if s.VoiceConnections[m.GuildID] == nil {
-		// Not in a voice channel
-		chat.SendWarningEmbedMessage(s, m.ChannelID, playSoundTitle, "I am not in a voice channel. Join one first!")
-		return
+	targetChannelID := getUsersVoiceChannelID(s, m.GuildID, m.Author.ID)
+	if s.VoiceConnections[m.GuildID] == nil || targetChannelID != s.VoiceConnections[m.GuildID].ChannelID {
+		// Not in a voice channel; join
+		if err := openVoiceConnection(s, targetChannelID, m.GuildID); err != nil {
+			chat.SendErrorEmbedMessage(s, m.ChannelID, playSoundTitle, err)
+			return
+		}
 	}
 	var query = m.Content[1:] // assumes '?' (or one character) start prefix
 	var library = sound.GetLibrary()
@@ -189,10 +192,13 @@ func PlaySoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 // PlaySoundSlashCommand plays a sound in a voice channel
 func PlaySoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var query string
-	if s.VoiceConnections[i.GuildID] == nil {
-		// Not in a voice channel
-		chat.SendWarningInteractionEmbedForAction(s, i, playSoundTitle, "I am not in a voice channel. Join one first!", nil)
-		return
+	targetChannelID := getUsersVoiceChannelID(s, i.GuildID, i.Member.User.ID)
+	if s.VoiceConnections[i.GuildID] == nil || targetChannelID != s.VoiceConnections[i.GuildID].ChannelID {
+		// Not in a voice channel; join
+		if err := openVoiceConnection(s, targetChannelID, i.GuildID); err != nil {
+			chat.SendErrorInteractionEmbedForAction(s, i, playSoundTitle, err)
+			return
+		}
 	}
 	args := i.ApplicationCommandData().Options
 	if len(args) == 1 {
@@ -216,48 +222,16 @@ func PlaySoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate)
 	}
 }
 
-// PlayRandomSoundMessageCommand plays a random sound in a voice channel
-func PlayRandomSoundMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if s.VoiceConnections[m.GuildID] == nil {
-		// Not in a voice channel
-		chat.SendWarningEmbedMessage(s, m.ChannelID, playSoundTitle, "I am not in a voice channel. Join one first!")
-		return
-	}
-	var query, category string
-	i := strings.Index(m.Content, " ")
-	if i > 0 {
-		query = m.Content[i+1:]
-	}
-	var library = sound.GetLibrary()
-	if len(query) > 0 {
-		var ok bool
-		ok, category = library.Category(query)
-		if !ok {
-			chat.SendWarningEmbedMessage(s, m.ChannelID, playRandomSoundTitle, "Could not find any category with name "+query)
-			return
-		}
-	}
-	db := LoadDatabase()
-	defer db.Close()
-	var file *sound.File
-	if len(category) > 0 {
-		file = library.GetRandomSoundForCategory(category)
-	} else {
-		file = library.GetRandomSound()
-	}
-	playSoundWithSave(file, s.VoiceConnections[m.GuildID], db)
-	soundInfo := fmt.Sprintf("Played random sound `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
-	msg := soundInfo + chat.Separator + m.Author.Mention()
-	chat.SendEmbedMessage(s, m.ChannelID, playRandomSoundTitle, msg, map[string]string{})
-}
-
 // PlayRandomSoundSlashCommand plays a random sound in a voice channel
 func PlayRandomSoundSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var query, category string
-	if s.VoiceConnections[i.GuildID] == nil {
-		// Not in a voice channel
-		chat.SendWarningInteractionEmbedForAction(s, i, playRandomSoundTitle, "I am not in a voice channel. Join one first!", nil)
-		return
+	targetChannelID := getUsersVoiceChannelID(s, i.GuildID, i.Member.User.ID)
+	if s.VoiceConnections[i.GuildID] == nil || targetChannelID != s.VoiceConnections[i.GuildID].ChannelID {
+		// Not in a voice channel; join
+		if err := openVoiceConnection(s, targetChannelID, i.GuildID); err != nil {
+			chat.SendErrorInteractionEmbedForAction(s, i, playRandomSoundTitle, err)
+			return
+		}
 	}
 	args := i.ApplicationCommandData().Options
 	if len(args) == 1 {

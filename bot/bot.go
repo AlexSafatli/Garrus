@@ -56,10 +56,6 @@ func (b *Bot) initMessageCommands() {
 			Function: ListCategoriesMessageCommand,
 		},
 		{
-			Command:  ".random",
-			Function: PlayRandomSoundMessageCommand,
-		},
-		{
 			Command:  "?",
 			Function: PlaySoundMessageCommand,
 		},

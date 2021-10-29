@@ -103,6 +103,16 @@ func SendWarningInteractionEmbedForAction(s *discordgo.Session, i *discordgo.Int
 	DeleteInteractionResponse(s, i)
 }
 
+// SendErrorInteractionEmbedForAction sends an error embed response for an interaction
+func SendErrorInteractionEmbedForAction(s *discordgo.Session, i *discordgo.InteractionCreate, title string, err error) {
+	sendInteractionEmbedHeader(s, i,
+		discordgo.InteractionResponseChannelMessageWithSource,
+		&discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{
+			makeErrorEmbed(title, err),
+		}}, err)
+	DeleteInteractionResponse(s, i)
+}
+
 // SendInteractionAckForAction sends a deferred interaction acknowledgment for an action
 func SendInteractionAckForAction(s *discordgo.Session, i *discordgo.InteractionCreate, err error) {
 	sendInteractionEmbedHeader(s, i,

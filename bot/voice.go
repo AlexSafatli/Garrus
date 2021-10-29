@@ -20,6 +20,20 @@ func getUsersVoiceConnectionsCountMap(s *discordgo.Session, g *discordgo.Guild) 
 	return
 }
 
+func getUsersVoiceChannelID(s *discordgo.Session, guildID, userID string) (channelID string) {
+	g, err := s.State.Guild(guildID)
+	if err != nil {
+		return
+	}
+	for _, vs := range g.VoiceStates {
+		if vs.UserID == userID {
+			channelID = vs.ChannelID
+			return
+		}
+	}
+	return
+}
+
 func openVoiceConnection(s *discordgo.Session, channelID, guildID string) error {
 	existing, ok := s.VoiceConnections[guildID]
 	if ok && existing.ChannelID != channelID || !ok {
