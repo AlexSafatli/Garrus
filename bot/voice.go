@@ -9,6 +9,17 @@ import (
 	"log"
 )
 
+func getUsersVoiceConnectionsCountMap(s *discordgo.Session, g *discordgo.Guild) (total int, usersFound map[string]int) {
+	usersFound = make(map[string]int)
+	for _, vs := range g.VoiceStates {
+		if vs.UserID != s.State.User.ID {
+			usersFound[vs.ChannelID]++
+			total++
+		}
+	}
+	return
+}
+
 func openVoiceConnection(s *discordgo.Session, channelID, guildID string) error {
 	existing, ok := s.VoiceConnections[guildID]
 	if ok && existing.ChannelID != channelID || !ok {
@@ -27,22 +38,15 @@ func closeVoiceConnectionOrChangeChannelsIfAlone(s *discordgo.Session, guildID s
 	if err != nil {
 		return
 	}
-	var totalUsersFound int
-	var usersFound map[string]int
 
-	usersFound = make(map[string]int)
-	for _, vs := range g.VoiceStates {
-		if vs.UserID != s.State.User.ID {
-			usersFound[vs.ChannelID]++
-			totalUsersFound++
-		}
-	}
+	totalUsersFound, usersFound := getUsersVoiceConnectionsCountMap(s, g)
+	channelID := s.VoiceConnections[guildID].ChannelID
 
 	if totalUsersFound == 0 {
 		if err = s.VoiceConnections[guildID].Disconnect(); err != nil {
 			s.VoiceConnections[guildID].Close()
 		}
-	} else {
+	} else if usersFound[channelID] == 0 {
 		var mostUsers int
 		var channelIDWithMostUsers string
 		for k, v := range usersFound {
@@ -50,7 +54,7 @@ func closeVoiceConnectionOrChangeChannelsIfAlone(s *discordgo.Session, guildID s
 				channelIDWithMostUsers = k
 			}
 		}
-		if channelIDWithMostUsers != s.VoiceConnections[guildID].ChannelID {
+		if channelIDWithMostUsers != channelID {
 			_ = s.VoiceConnections[guildID].ChangeChannel(channelIDWithMostUsers, false, true)
 		}
 	}
