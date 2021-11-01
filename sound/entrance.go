@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/boltdb/bolt"
+	"log"
 )
 
 type Entrance struct {
@@ -49,9 +50,10 @@ func SetEntranceForUser(userID, soundID, msg string, db *bolt.DB) error {
 	if err != nil {
 		return err
 	}
-	e_ := GetEntranceForUser(userID)
-	if e_ != nil {
-		e_.SoundID = soundID
+	i := getEntranceIndex(userID)
+	if i >= 0 {
+		log.Printf("Found entrance %+v; changing sound ID", entrances[i])
+		entrances[i].SoundID = soundID
 	} else {
 		entrances = append(entrances, e)
 	}

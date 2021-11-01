@@ -12,7 +12,7 @@ import (
 type Bot struct {
 	Start                   time.Time
 	MessageCommands         []*chat.MessageCommand
-	SlashCommands           []*chat.SlashCommand
+	SlashCommands           map[string]*chat.SlashCommand
 	lastSentEntranceMessage map[string]string
 	mainGuildChannelIDs     map[string]string
 	*discordgo.Session
@@ -63,15 +63,15 @@ func (b *Bot) initMessageCommands() {
 }
 
 func (b *Bot) initSlashCommands() {
-	b.SlashCommands = []*chat.SlashCommand{
-		{
+	b.SlashCommands = map[string]*chat.SlashCommand{
+		"about": {
 			Command: &discordgo.ApplicationCommand{
 				Name:        "about",
 				Description: "About this bot",
 			},
 			Function: AboutSlashCommand,
 		},
-		{
+		"entrance": {
 			Command: &discordgo.ApplicationCommand{
 				Name:        "entrance",
 				Description: "Set your entrance sound when joining a voice channel (or clear it if an empty string is given)",
@@ -92,7 +92,7 @@ func (b *Bot) initSlashCommands() {
 			},
 			Function: SetEntranceSlashCommand,
 		},
-		{
+		"searchfor": {
 			Command: &discordgo.ApplicationCommand{
 				Name:        "searchfor",
 				Description: "Lists all sound files matching a query",
@@ -107,7 +107,7 @@ func (b *Bot) initSlashCommands() {
 			},
 			Function: SearchSoundsSlashCommand,
 		},
-		{
+		"list": {
 			Command: &discordgo.ApplicationCommand{
 				Name:        "list",
 				Description: "Lists all sound files for a category",
@@ -122,14 +122,14 @@ func (b *Bot) initSlashCommands() {
 			},
 			Function: ListSoundsSlashCommand,
 		},
-		{
+		"categories": {
 			Command: &discordgo.ApplicationCommand{
 				Name:        "categories",
 				Description: "Lists all categories",
 			},
 			Function: ListCategoriesSlashCommand,
 		},
-		{
+		"random": {
 			Command: &discordgo.ApplicationCommand{
 				Name:        "random",
 				Description: "Play a random sound file (optionally within a category)",
@@ -144,7 +144,7 @@ func (b *Bot) initSlashCommands() {
 			},
 			Function: PlayRandomSoundSlashCommand,
 		},
-		{
+		"sound": {
 			Command: &discordgo.ApplicationCommand{
 				Name:        "sound",
 				Description: "Play a sound file by name",
@@ -170,13 +170,12 @@ func (b *Bot) routeHandlers() {
 }
 
 func (b *Bot) RegisterSlashCommands() error {
+	var s []*discordgo.ApplicationCommand
 	for _, c := range b.SlashCommands {
-		_, err := b.Session.ApplicationCommandCreate(b.Session.State.User.ID, "", c.Command)
-		if err != nil {
-			return err
-		}
+		s = append(s, c.Command)
 	}
-	return nil
+	_, err := b.Session.ApplicationCommandBulkOverwrite(b.Session.State.User.ID, "", s)
+	return err
 }
 
 // Self returns the User struct associated with the bot user
