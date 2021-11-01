@@ -2,9 +2,8 @@
 
 A **Discord bot** written in Golang that serves as a **soundboard** for users in
 a voice channel. This bot is able to be deployed to multiple servers through a
-single Bot user, and then deployed again over multiple Bot users. This project
-was started from scratch and has many ideas borrowed from
-my [NootBot](http://github.com/AlexSafatli/NootBot) project and is built to have
+single Bot user. This project was started from scratch with many ideas borrowed 
+from [NootBot](http://github.com/AlexSafatli/NootBot) and is built to have
 as minimal a resource footprint as possible while serving no superfluous
 features.
 
