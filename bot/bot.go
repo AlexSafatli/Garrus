@@ -44,6 +44,10 @@ func (b *Bot) initMessageCommands() {
 			Function: SetEntranceMessageCommand,
 		},
 		{
+			Command:  ".entrancefor",
+			Function: SetEntranceForUserMessageCommand,
+		},
+		{
 			Command:  ".search",
 			Function: SearchSoundsMessageCommand,
 		},
