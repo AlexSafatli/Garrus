@@ -9,16 +9,6 @@ import (
 	"strings"
 )
 
-func getUserIDByNameInGuild(s *discordgo.Session, name, guildID string) string {
-	members, _ := s.GuildMembers(guildID, "", 1000)
-	for _, m := range members {
-		if m.User.Username == name {
-			return m.User.ID
-		}
-	}
-	return ""
-}
-
 func searchSounds(query string) (possibilities []string) {
 	query = strings.ToLower(query)
 	closest := sound.GetLibrary().GetClosestMatchingSoundID(query)

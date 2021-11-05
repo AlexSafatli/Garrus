@@ -40,10 +40,6 @@ func (b *Bot) initMessageCommands() {
 			Function: AboutMessageCommand,
 		},
 		{
-			Command:  ".entrancefor",
-			Function: SetEntranceForUserMessageCommand,
-		},
-		{
 			Command:  ".entrance",
 			Function: SetEntranceMessageCommand,
 		},

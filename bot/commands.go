@@ -71,43 +71,6 @@ func SetEntranceSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreat
 	}
 }
 
-// SetEntranceForUserMessageCommand sets an entrance for a specific user
-func SetEntranceForUserMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
-	var userID, soundID, content string
-	db := LoadDatabase()
-	defer db.Close()
-	i := strings.Index(m.Content, " ")
-	if i > 0 {
-		content = m.Content[i+1:]
-	} else {
-		chat.SendWarningEmbedMessage(s, m.ChannelID, entranceTitle, "Need a user and sound.")
-		return
-	}
-	if !authenticate(s, m.GuildID, m.Author.ID) {
-		chat.SendWarningEmbedMessage(s, m.ChannelID, entranceTitle, "Need to be an administrator of the server.")
-		return
-	}
-	args := strings.Split(content, ",")
-	if len(args) >= 1 {
-		userName := args[0]
-		userID = getUserIDByNameInGuild(s, userName, m.GuildID)
-		if userID == "" {
-			chat.SendWarningEmbedMessage(s, m.ChannelID, entranceTitle, "Could not find user `"+userName+"`.")
-			return
-		}
-	}
-	if len(args) >= 2 {
-		soundID = args[1]
-	}
-	if soundID == "" {
-		err := sound.DeleteEntranceForUser(userID, db)
-		chat.SendSimpleMessageResponseForAction(s, m.ChannelID, entranceTitle, "Cleared entrance.", err)
-		return
-	}
-	err := sound.SetEntranceForUser(userID, soundID, "", db)
-	chat.SendSimpleMessageResponseForAction(s, m.ChannelID, entranceTitle, fmt.Sprintf("Set entrance to `%s`.", soundID), err)
-}
-
 // SearchSoundsMessageCommand returns the collection of sounds matching a query
 func SearchSoundsMessageCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	var query string
