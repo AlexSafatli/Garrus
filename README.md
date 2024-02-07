@@ -7,6 +7,8 @@ from [NootBot](http://github.com/AlexSafatli/NootBot) and is built to have
 as minimal a resource footprint as possible while serving no superfluous
 features.
 
+*This project is now abandoned as the feature has been fulfilled and implemented into Discord.*
+
 ## Implemented Features
 
 - **Sound file** maintenance
@@ -20,7 +22,7 @@ features.
     - This entrance should be able to be set by users (`.entrance`)
     - Users who have not set an entrance will not receive a welcome message
 
-## Planned Features
+## ~~Planned Features~~
 
 - **Sound file** maintenance
     - Possible future use of S3 to store clips
