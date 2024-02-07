@@ -4,13 +4,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-// OnGuildVoiceJoinHandler is a very specific use-case handler function that controls follow and entrance behavior
-func OnGuildVoiceJoinHandler(b *Bot) func(*discordgo.Session, *discordgo.VoiceStateUpdate) {
-	return func(s *discordgo.Session, vs *discordgo.VoiceStateUpdate) {
-		followOnMove(b, s, vs)
-	}
-}
-
 // OnGuildChannelCreateHandler is another specific use-case handler function that invalidates the bot's channel ID cache if the channel in the cache is deleted
 func OnGuildChannelCreateHandler(b *Bot) func(*discordgo.Session, *discordgo.ChannelCreate) {
 	return func(s *discordgo.Session, cc *discordgo.ChannelCreate) {

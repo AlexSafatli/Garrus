@@ -3,13 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/AlexSafatli/Garrus/bot"
-	"github.com/AlexSafatli/Garrus/sound"
-	"math/rand"
+	"log"
 	"os/signal"
 	"syscall"
-	"time"
-
-	"log"
 
 	"os"
 
@@ -17,37 +13,11 @@ import (
 )
 
 func main() {
-	var err error
-
-	rand.Seed(int64(time.Now().Nanosecond()))
-
 	configValues := config.LoadConfigs()
 	log.Println("Loaded config")
 
-	// Load flat file database
+	// Set flat file database location
 	bot.SetDatabasePath(configValues.DbPath)
-	db := bot.LoadDatabase()
-	log.Println("Loaded database from " + configValues.DbPath)
-
-	// Load entrances
-	err = sound.LoadEntrances(db)
-	if err != nil {
-		log.Fatalln("Could not load entrances from database", err)
-	}
-
-	// Load sounds and sound data
-	if err = sound.LoadSounds(configValues.SoundsPath); err != nil {
-		log.Fatalln("Could not load/convert sounds from "+configValues.SoundsPath, err)
-	}
-	if err = sound.GetLibrary().LoadSoundData(db); err != nil {
-		log.Fatalln("Could not load sound data from database", err)
-	}
-	log.Println("Loaded sounds from " + configValues.SoundsPath)
-
-	// Close database for now
-	if err = db.Close(); err != nil {
-		log.Fatalln("Could not properly close database", err)
-	}
 
 	// Load bot
 	discord, _ := bot.NewBot("Bot " + configValues.DiscordToken)

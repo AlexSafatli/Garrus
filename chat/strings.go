@@ -3,6 +3,7 @@ package chat
 import (
 	"math/rand"
 	"strings"
+	"time"
 )
 
 const (
@@ -12,6 +13,7 @@ const (
 
 var (
 	Whats = []string{"What?", "Nani?", "Huh?", "なんてこったい？", "Que?"}
+	r     = rand.New(rand.NewSource(int64(time.Now().Nanosecond())))
 )
 
 type MessageBuilder struct {
@@ -56,7 +58,7 @@ func RandomString(s []string) string {
 	if len(s) == 1 {
 		return s[0]
 	}
-	i := rand.Intn(len(s))
+	i := r.Intn(len(s))
 	return s[i]
 }
 

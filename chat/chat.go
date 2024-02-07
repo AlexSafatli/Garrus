@@ -3,7 +3,6 @@ package chat
 import (
 	"github.com/bwmarrin/discordgo"
 	"log"
-	"time"
 )
 
 const (
@@ -30,18 +29,14 @@ const (
 	discordColorLightGrey  = 12370112
 	discordColorDarkNavy   = 2899536
 
+	discordCustomColorRoseGold      = 15648450
+	discordCustomColorWarmPink      = 16734337
+	discordCustomColorMilkWhite     = 16643563
+	discordCustomColorWisteria      = 10976706
+	discordCustomColorPaleGoldenrod = 16114856
+
 	botMessageSearchLimit = 50
 )
-
-// DeleteReceivedMessage takes a created message and deletes it if it is not private
-func DeleteReceivedMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.GuildID != "" {
-		err := s.ChannelMessageDelete(m.ChannelID, m.ID)
-		if err != nil {
-			log.Printf("Could not delete message from %s", m.Author.Username)
-		}
-	}
-}
 
 // DeleteBotMessages deletes all bot messages found in the given channel
 func DeleteBotMessages(s *discordgo.Session, channelID, aroundID string) {
@@ -61,21 +56,4 @@ func DeleteBotMessages(s *discordgo.Session, channelID, aroundID string) {
 			log.Printf("Could not bulk delete all found %d bot messages in channel %s => %s", len(botMessageIDs), channelID, err)
 		}
 	}
-}
-
-// SendSimpleMessageResponseForAction sends a response for a message command with no fields
-func SendSimpleMessageResponseForAction(s *discordgo.Session, channelID, title, payload string, err error) {
-	SendMessageResponseForAction(s, channelID, title, payload, map[string]string{}, err)
-}
-
-// SendMessageResponseForAction sends a response for a message command
-func SendMessageResponseForAction(s *discordgo.Session, channelID, title, payload string, fields map[string]string, err error) {
-	var msg *discordgo.Message
-	if err != nil {
-		msg = SendErrorEmbedMessage(s, channelID, title, err)
-	} else {
-		msg = SendEmbedMessage(s, channelID, title, payload, fields)
-	}
-	time.Sleep(time.Second * 10)
-	_ = s.ChannelMessageDelete(channelID, msg.ID)
 }

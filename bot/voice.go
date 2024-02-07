@@ -1,12 +1,7 @@
 package bot
 
 import (
-	"fmt"
-	"github.com/AlexSafatli/Garrus/chat"
-	"github.com/AlexSafatli/Garrus/sound"
-	"github.com/boltdb/bolt"
 	"github.com/bwmarrin/discordgo"
-	"log"
 )
 
 func getUsersVoiceConnectionsCountMap(s *discordgo.Session, g *discordgo.Guild) (total int, usersFound map[string]int) {
@@ -70,74 +65,6 @@ func closeVoiceConnectionOrChangeChannelsIfAlone(s *discordgo.Session, guildID s
 		}
 		if channelIDWithMostUsers != channelID {
 			_ = s.VoiceConnections[guildID].ChangeChannel(channelIDWithMostUsers, false, true)
-		}
-	}
-}
-
-func playSound(file *sound.File, vc *discordgo.VoiceConnection) {
-	go func() {
-		if err := sound.PlayDCA(file.FilePath, vc); err != nil {
-			log.Println("When playing sound " + file.ID + " -> " + err.Error())
-		}
-	}()
-}
-
-func playSoundWithSave(file *sound.File, vc *discordgo.VoiceConnection, db *bolt.DB) {
-	playSound(file, vc)
-	file.NumberPlays++
-	if err := sound.GetLibrary().SetSoundData(file, db); err != nil {
-		log.Fatalln("When updating sound => " + err.Error())
-	}
-}
-
-func followOnMove(b *Bot, s *discordgo.Session, vs *discordgo.VoiceStateUpdate) {
-	var err error
-	vc, ok := s.VoiceConnections[vs.GuildID]
-	if vs.UserID == s.State.User.ID { // move done by bot
-		return
-	}
-	if len(vs.ChannelID) == 0 { // empty target voice channel
-		defer closeVoiceConnectionOrChangeChannelsIfAlone(s, vs.GuildID)
-	}
-	if len(vs.ChannelID) > 0 && (vs.BeforeUpdate == nil || vs.BeforeUpdate.ChannelID != vs.ChannelID) {
-		if !ok {
-			if err = openVoiceConnection(s, vs.ChannelID, vs.GuildID); err != nil {
-				log.Printf("Error when joining voice channel %s -> %v", vs.ChannelID, err)
-				return
-			}
-			vc = s.VoiceConnections[vs.GuildID]
-		}
-		if vc.ChannelID != vs.ChannelID {
-			return
-		}
-
-		entrance := sound.GetEntranceForUser(vs.UserID)
-
-		// If the user has an entrance, play it
-		if entrance != nil {
-
-			// Get the file to play
-			var file = sound.GetLibrary().SoundMap[entrance.SoundID]
-			if file == nil {
-				log.Println("File was not found for entrance", entrance)
-				return
-			}
-
-			// Play it in a goroutine; do not increment play count
-			playSound(file, vc)
-
-			// Send a welcome message, delete old bot messages
-			channelID := getMainChannelIDForGuild(b, vs.GuildID)
-			soundInfo := fmt.Sprintf("Played `%s` from **%s** (**%d** plays)", file.ID, file.Categories[0], file.NumberPlays)
-			u, err := b.Session.User(vs.UserID)
-			if err != nil {
-				return
-			}
-			if lastMessageID, ok := b.lastSentEntranceMessage[vs.GuildID]; ok {
-				chat.DeleteBotMessages(s, channelID, lastMessageID)
-			}
-			m := chat.SendWelcomeEmbedMessage(b.Session, channelID, u, soundInfo)
-			b.lastSentEntranceMessage[vs.GuildID] = m.ID // keep track of the last sent entrance message
 		}
 	}
 }

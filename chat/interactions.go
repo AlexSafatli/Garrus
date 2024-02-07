@@ -21,7 +21,7 @@ func sendInteractionEmbedHeader(s *discordgo.Session, i *discordgo.InteractionCr
 		})
 	}
 	if errResponse != nil {
-		_, _ = s.FollowupMessageCreate(s.State.User.ID, i.Interaction, true, &discordgo.WebhookParams{
+		_, _ = s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
 			Content: "Something went wrong with sending a response",
 		})
 	}
@@ -31,14 +31,14 @@ func sendInteractionEmbedHeader(s *discordgo.Session, i *discordgo.InteractionCr
 func DeleteInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	go func() {
 		time.Sleep(time.Second * 10)
-		_ = s.InteractionResponseDelete(s.State.User.ID, i.Interaction)
+		_ = s.InteractionResponseDelete(i.Interaction)
 	}()
 }
 
 // EditInteractionResponse edits the original response of an interaction
 func EditInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, content string) {
-	_, _ = s.InteractionResponseEdit(s.State.User.ID, i.Interaction, &discordgo.WebhookEdit{
-		Content: content,
+	_, _ = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Content: &content,
 	})
 }
 
