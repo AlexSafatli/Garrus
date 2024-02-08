@@ -16,7 +16,7 @@ func makeEmbed(title string, description string, fields map[string]string, color
 		}
 	}
 	embed.Footer = &discordgo.MessageEmbedFooter{
-		Text: version.Version.Name + " " + version.Version.Version + "+" + version.Version.GitCommit[:8] + Separator + version.Version.Developer,
+		Text: version.Version.Name + " " + version.Version.Version + "+" + version.Version.GitCommit + Separator + version.Version.Developer,
 	}
 	return embed
 }

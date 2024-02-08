@@ -6,7 +6,6 @@ const (
 	confType     = "toml"
 	basePath     = "."
 	discordToken = "discord.token"
-	soundsPath   = "paths.sounds"
 	dbPath       = "paths.db"
 )
 
@@ -24,7 +23,6 @@ func LoadConfigs() Values {
 	}
 	return Values{
 		DiscordToken: conf.ValueString(discordToken),
-		SoundsPath:   conf.ValueString(soundsPath),
 		DbPath:       conf.ValueString(dbPath),
 	}
 }

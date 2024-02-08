@@ -6,8 +6,8 @@ import (
 
 type DiceResult struct {
 	dice.Formula `json:"formula"`
-	dice.Roll    `json:"roll"`
-	Result       []int `json:"result"`
+	Roll         dice.Rollable `json:"roll"`
+	Result       int           `json:"result"`
 }
 
 func Roll(f dice.Formula) (d DiceResult, err error) {

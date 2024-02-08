@@ -3,6 +3,8 @@ package bot
 import (
 	"fmt"
 	"github.com/AlexSafatli/Garrus/chat"
+	"github.com/AlexSafatli/Garrus/rpg"
+	"github.com/AlexSafatli/Garrus/rpg/dice"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -14,20 +16,16 @@ func AboutCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // RollDiceCommand rolls an RPG dice query string
 func RollDiceCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var formula string
-	var possibilities []string
 	args := i.ApplicationCommandData().Options
 	if len(args) == 1 {
 		formula = args[0].StringValue()
 	}
-	result = rollDice(formula)
-	mb := chat.MessageBuilder{}
-	_ = mb.Write(fmt.Sprintf("Found **%d** possible sounds for query `%s`%s%s.\n\n", len(possibilities), query, chat.Separator, i.Member.Mention()))
-	if len(possibilities) > 0 {
-		for _, k := range possibilities {
-			_ = mb.Write("`?" + k + "` ")
-		}
-		chat.SendSimpleInteractionEmbedsForAction(s, i, searchSoundsTitle, mb.GetMessageStrings(), nil)
+	d, err := rpg.Roll(dice.Formula(formula))
+	if err != nil {
+		chat.SendErrorInteractionEmbedForAction(s, i, "Roll Dice", err)
 	} else {
-		chat.SendWarningInteractionEmbedForAction(s, i, searchSoundsTitle, "Could not find any sounds for query `"+query+"`.", nil)
+		chat.SendSimpleInteractionEmbedsForAction(s, i, "Roll Dice",
+			[]string{fmt.Sprintf("You rolled `%s` and got %d.", formula, d.Result)},
+			err)
 	}
 }

@@ -27,32 +27,20 @@ func (s *BaseDiceListener) EnterNotation(ctx *NotationContext) {}
 // ExitNotation is called when production notation is exited.
 func (s *BaseDiceListener) ExitNotation(ctx *NotationContext) {}
 
-// EnterAdd is called when production add is entered.
-func (s *BaseDiceListener) EnterAdd(ctx *AddContext) {}
+// EnterCount is called when production count is entered.
+func (s *BaseDiceListener) EnterCount(ctx *CountContext) {}
 
-// ExitAdd is called when production add is exited.
-func (s *BaseDiceListener) ExitAdd(ctx *AddContext) {}
+// ExitCount is called when production count is exited.
+func (s *BaseDiceListener) ExitCount(ctx *CountContext) {}
 
-// EnterMult is called when production mult is entered.
-func (s *BaseDiceListener) EnterMult(ctx *MultContext) {}
+// EnterSides is called when production sides is entered.
+func (s *BaseDiceListener) EnterSides(ctx *SidesContext) {}
 
-// ExitMult is called when production mult is exited.
-func (s *BaseDiceListener) ExitMult(ctx *MultContext) {}
+// ExitSides is called when production sides is exited.
+func (s *BaseDiceListener) ExitSides(ctx *SidesContext) {}
 
-// EnterOperand is called when production operand is entered.
-func (s *BaseDiceListener) EnterOperand(ctx *OperandContext) {}
+// EnterModifier is called when production modifier is entered.
+func (s *BaseDiceListener) EnterModifier(ctx *ModifierContext) {}
 
-// ExitOperand is called when production operand is exited.
-func (s *BaseDiceListener) ExitOperand(ctx *OperandContext) {}
-
-// EnterDice is called when production dice is entered.
-func (s *BaseDiceListener) EnterDice(ctx *DiceContext) {}
-
-// ExitDice is called when production dice is exited.
-func (s *BaseDiceListener) ExitDice(ctx *DiceContext) {}
-
-// EnterNumber is called when production number is entered.
-func (s *BaseDiceListener) EnterNumber(ctx *NumberContext) {}
-
-// ExitNumber is called when production number is exited.
-func (s *BaseDiceListener) ExitNumber(ctx *NumberContext) {}
+// ExitModifier is called when production modifier is exited.
+func (s *BaseDiceListener) ExitModifier(ctx *ModifierContext) {}

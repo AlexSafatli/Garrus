@@ -4,44 +4,61 @@ import (
 	"fmt"
 	fp "github.com/AlexSafatli/Garrus/rpg/dice/parser"
 	"github.com/antlr4-go/antlr/v4"
-	"github.com/golang-collections/collections/stack"
 	"github.com/pkg/errors"
+	"strconv"
 )
 
 type ListenerError struct {
 	antlr.ErrorListener
 }
 
-// DiceParserListener implements the BaseDiceListener
 type DiceParserListener struct {
-	roll  Roll
-	nodes *stack.Stack
+	roll RollableDice
 	fp.BaseDiceListener
 }
 
-func (s *DiceParserListener) Roll() Roll { return s.roll }
-
-func (s *DiceParserListener) ExitAdd(ctx *fp.AddContext) {
-	var operators []string
-	for _, operator := range ctx.AllADDOPERATOR() {
-		operators = append(operators, operator.GetText())
-	}
-
-}
-
-func binaryOperation(operators []string) string {
-	var operands *stack.Stack
-	operands = stack.New()
-
-	for _, op := range operators {
-		operands.Push()
+func (s *DiceParserListener) EnterNotation(_ *fp.NotationContext) {
+	s.roll = RollableDice{
+		Num:   1,
+		Sides: 1,
 	}
 }
 
-func parse(f Formula) (_ Roll, err error) {
+func (s *DiceParserListener) EnterCount(ctx *fp.CountContext) {
+	i, err := strconv.Atoi(ctx.GetText())
+	if err != nil {
+		panic(fmt.Sprintf("failed to cast Count to integer: %s", err))
+	}
+	s.roll.Num = i
+}
+
+func (s *DiceParserListener) EnterSides(ctx *fp.SidesContext) {
+	i, err := strconv.Atoi(ctx.GetText()[1:])
+	if err != nil {
+		panic(fmt.Sprintf("failed to cast Sides to integer: %s", err))
+	}
+	s.roll.Sides = i
+}
+
+func (s *DiceParserListener) EnterModifier(ctx *fp.ModifierContext) {
+	var n int
+	n = 1
+	if ctx.SIGN().GetText() == "-" {
+		n = -1
+	}
+
+	str := ctx.Integer().GetText()
+	i, err := strconv.Atoi(str)
+	if err != nil {
+		panic(fmt.Sprintf("failed to cast Modifier to integer: %s", err))
+	}
+	s.roll.Modifier = i * n
+}
+
+func parse(f Formula) (_ Rollable, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = errors.Wrap(r.(error), fmt.Sprintf("failed to parse formula \"%s\"", f))
+			err = errors.Wrap(errors.New(r.(string)), fmt.Sprintf("failed to parse formula \"%s\"", f))
 		}
 	}()
 
@@ -54,6 +71,6 @@ func parse(f Formula) (_ Roll, err error) {
 	dp.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
 	dp.BuildParseTrees = true
 
-	antlr.ParseTreeWalkerDefault.Walk(listener, dp.Formula())
-	return listener.Roll(), err
+	antlr.ParseTreeWalkerDefault.Walk(listener, dp.Notation())
+	return listener.roll, err
 }

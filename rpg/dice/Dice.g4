@@ -1,10 +1,19 @@
 grammar Dice;
 
-options { tokenVocab=DiceLexer; }
+D       : [dD] ;
+SIGN    : [\-+] ;
+LPAREN  : '(' ;
+RPAREN  : ')' ;
+COMMA   : ',' ;
+SPACE   : ' ' ;
 
-notation : dice | number | add ;
-add : mult (ADDOPERATOR mult)* ;
-mult : operand (MULTOPERATOR operand)* ;
-operand : dice | number | LPAREN notation RPAREN ;
-dice : ADDOPERATOR? DIGIT? DSEPARATOR DIGIT ;
-number : ADDOPERATOR? DIGIT ;
+WS      : [\r\n\t] -> skip ;
+
+Integer       : [0-9]+ ;
+Id            : [a-zA-Z][A-Za-z0-9]+ ;
+StringLiteral : '"' ~('\'' | '\\' | '\n' | '\r')+ '"' ;
+
+notation  : count? sides modifier? ;
+count     : Integer ;
+sides     : Id ;
+modifier  : SIGN Integer ;

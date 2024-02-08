@@ -2,7 +2,6 @@ package chat
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"time"
 )
 
 func sendInteractionEmbedHeader(s *discordgo.Session, i *discordgo.InteractionCreate, respType discordgo.InteractionResponseType, respData *discordgo.InteractionResponseData, err error) {
@@ -27,14 +26,6 @@ func sendInteractionEmbedHeader(s *discordgo.Session, i *discordgo.InteractionCr
 	}
 }
 
-// DeleteInteractionResponse deletes a response sent from an interaction
-func DeleteInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	go func() {
-		time.Sleep(time.Second * 10)
-		_ = s.InteractionResponseDelete(i.Interaction)
-	}()
-}
-
 // EditInteractionResponse edits the original response of an interaction
 func EditInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, content string) {
 	_, _ = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
@@ -47,34 +38,31 @@ func SendInteractionResponseForAction(s *discordgo.Session, i *discordgo.Interac
 	sendInteractionEmbedHeader(s, i,
 		discordgo.InteractionResponseChannelMessageWithSource,
 		&discordgo.InteractionResponseData{Content: payload}, err)
-	DeleteInteractionResponse(s, i)
 }
 
 // SendSimpleInteractionEmbedForAction sends an embed response for an interaction with no fields
 func SendSimpleInteractionEmbedForAction(s *discordgo.Session, i *discordgo.InteractionCreate, title, description string, err error) {
-	SendInteractionEmbedForAction(s, i, title, description, map[string]string{}, err)
+	SendInteractionEmbedForAction(s, i, title, description, map[string]string{}, discordCustomColorMilkWhite, err)
 }
 
 // SendInteractionEmbedForAction sends an embed response to an interaction
-func SendInteractionEmbedForAction(s *discordgo.Session, i *discordgo.InteractionCreate, title, description string, fields map[string]string, err error) {
+func SendInteractionEmbedForAction(s *discordgo.Session, i *discordgo.InteractionCreate, title, description string, fields map[string]string, color int, err error) {
 	sendInteractionEmbedHeader(s, i,
 		discordgo.InteractionResponseChannelMessageWithSource,
 		&discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{
-			makeEmbed(title, description, fields),
+			makeEmbed(title, description, fields, color),
 		}}, err)
-	DeleteInteractionResponse(s, i)
 }
 
 // SendSimpleInteractionEmbedsForAction sends multiple embed responses for an interaction
 func SendSimpleInteractionEmbedsForAction(s *discordgo.Session, i *discordgo.InteractionCreate, title string, descriptions []string, err error) {
 	var embeds []*discordgo.MessageEmbed
 	for i := range descriptions {
-		embeds = append(embeds, makeEmbed(title, descriptions[i], map[string]string{}))
+		embeds = append(embeds, makeEmbed(title, descriptions[i], map[string]string{}, discordCustomColorMilkWhite))
 	}
 	sendInteractionEmbedHeader(s, i,
 		discordgo.InteractionResponseChannelMessageWithSource,
 		&discordgo.InteractionResponseData{Embeds: embeds}, err)
-	DeleteInteractionResponse(s, i)
 }
 
 // SendInteractionRawEmbedForAction sends a raw embed response to an interaction
@@ -82,7 +70,6 @@ func SendInteractionRawEmbedForAction(s *discordgo.Session, i *discordgo.Interac
 	sendInteractionEmbedHeader(s, i,
 		discordgo.InteractionResponseChannelMessageWithSource,
 		&discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{embed}}, err)
-	DeleteInteractionResponse(s, i)
 }
 
 // SendInteractionRawEmbedsForAction sends a raw embed response to an interaction
@@ -90,7 +77,6 @@ func SendInteractionRawEmbedsForAction(s *discordgo.Session, i *discordgo.Intera
 	sendInteractionEmbedHeader(s, i,
 		discordgo.InteractionResponseChannelMessageWithSource,
 		&discordgo.InteractionResponseData{Embeds: embeds}, err)
-	DeleteInteractionResponse(s, i)
 }
 
 // SendWarningInteractionEmbedForAction sends a warning embed response for an interaction with no fields
@@ -100,7 +86,6 @@ func SendWarningInteractionEmbedForAction(s *discordgo.Session, i *discordgo.Int
 		&discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{
 			makeWarningEmbed(title, description, map[string]string{}),
 		}}, err)
-	DeleteInteractionResponse(s, i)
 }
 
 // SendErrorInteractionEmbedForAction sends an error embed response for an interaction
@@ -110,7 +95,6 @@ func SendErrorInteractionEmbedForAction(s *discordgo.Session, i *discordgo.Inter
 		&discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{
 			makeErrorEmbed(title, err),
 		}}, err)
-	DeleteInteractionResponse(s, i)
 }
 
 // SendInteractionAckForAction sends a deferred interaction acknowledgment for an action

@@ -11,36 +11,24 @@ type DiceListener interface {
 	// EnterNotation is called when entering the notation production.
 	EnterNotation(c *NotationContext)
 
-	// EnterAdd is called when entering the add production.
-	EnterAdd(c *AddContext)
+	// EnterCount is called when entering the count production.
+	EnterCount(c *CountContext)
 
-	// EnterMult is called when entering the mult production.
-	EnterMult(c *MultContext)
+	// EnterSides is called when entering the sides production.
+	EnterSides(c *SidesContext)
 
-	// EnterOperand is called when entering the operand production.
-	EnterOperand(c *OperandContext)
-
-	// EnterDice is called when entering the dice production.
-	EnterDice(c *DiceContext)
-
-	// EnterNumber is called when entering the number production.
-	EnterNumber(c *NumberContext)
+	// EnterModifier is called when entering the modifier production.
+	EnterModifier(c *ModifierContext)
 
 	// ExitNotation is called when exiting the notation production.
 	ExitNotation(c *NotationContext)
 
-	// ExitAdd is called when exiting the add production.
-	ExitAdd(c *AddContext)
+	// ExitCount is called when exiting the count production.
+	ExitCount(c *CountContext)
 
-	// ExitMult is called when exiting the mult production.
-	ExitMult(c *MultContext)
+	// ExitSides is called when exiting the sides production.
+	ExitSides(c *SidesContext)
 
-	// ExitOperand is called when exiting the operand production.
-	ExitOperand(c *OperandContext)
-
-	// ExitDice is called when exiting the dice production.
-	ExitDice(c *DiceContext)
-
-	// ExitNumber is called when exiting the number production.
-	ExitNumber(c *NumberContext)
+	// ExitModifier is called when exiting the modifier production.
+	ExitModifier(c *ModifierContext)
 }
